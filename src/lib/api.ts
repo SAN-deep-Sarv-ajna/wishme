@@ -1,18 +1,15 @@
+import { supabase } from '@/lib/supabase/client';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
   
-  // Get Supabase token from local storage if available
-  let token = null;
+  // Cleanly get the Supabase access token via the SDK
+  let token: string | undefined = undefined;
   if (typeof window !== 'undefined') {
-    const sessionStr = localStorage.getItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1].split('.')[0] + '-auth-token');
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        token = session.access_token;
-      } catch (e) {}
-    }
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token;
   }
 
   const headers: HeadersInit = {
@@ -21,7 +18,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
 
   const response = await fetch(url, {
@@ -38,6 +35,10 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     throw new Error(errorMessage);
   }
 
+  if (response.status === 204) {
+    return null;
+  }
+
   return response.json();
 }
 
@@ -47,8 +48,54 @@ export const api = {
     get: (slug: string) => fetchApi(`/wishes/${slug}`),
     create: (data: any) => fetchApi('/wishes/', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => fetchApi(`/wishes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => fetchApi(`/wishes/${id}`, { method: 'DELETE' }),
   },
   analytics: {
     trackEvent: (data: { wish_id: string, event_type: string }) => fetchApi('/analytics/event', { method: 'POST', body: JSON.stringify(data) }),
+    getSummary: () => fetchApi('/analytics/summary'),
+  },
+  ai: {
+    generate: async (payload: {
+      action: 'generate_reasons' | 'generate_single_reason' | 'generate_letter';
+      recipient_name: string;
+      sender_name?: string;
+      occasion?: string;
+      relationship?: string;
+      tone?: string;
+      custom_cues?: string;
+      count?: number;
+      existing_reasons?: { title: string }[];
+    }) => {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'AI generation failed');
+      }
+      return data.data;
+    }
+  },
+  qr: {
+    getUrl: (slug: string) => `${API_URL}/qr/${slug}`
+  },
+  media: {
+    uploadImage: async (file: File, wishId: string) => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('wish_id', wishId);
+      const res = await fetch(`${API_URL}/media/images`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      return res.json();
+    },
+    deleteImage: (publicId: string) => fetchApi(`/media/images/${encodeURIComponent(publicId)}`, { method: 'DELETE' })
   }
 };
