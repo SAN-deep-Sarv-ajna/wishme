@@ -1,9 +1,19 @@
 import { supabase } from '@/lib/supabase/client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+function getApiBaseUrl(): string {
+  let raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  raw = raw.trim().replace(/\/+$/, '');
+  if (!raw.endsWith('/api/v1')) {
+    raw = `${raw}/api/v1`;
+  }
+  return raw;
+}
+
+const API_URL = getApiBaseUrl();
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_URL}${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_URL}${cleanEndpoint}`;
   
   // Cleanly get the Supabase access token via the SDK
   let token: string | undefined = undefined;
