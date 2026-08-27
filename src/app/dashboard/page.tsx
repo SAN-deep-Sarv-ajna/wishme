@@ -8,7 +8,7 @@ import {
   Trash2, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
   ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, X,
-  Calendar, UserCheck, Activity, Flame
+  Calendar, UserCheck, Activity, BarChart3, LineChart, Sparkle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +28,8 @@ export default function DashboardPage() {
   // Modal states
   const [wishToDelete, setWishToDelete] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedAnalyticsWish, setSelectedAnalyticsWish] = useState<any | null>(null);
+  const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
 
   useEffect(() => {
     loadWishes();
@@ -44,6 +46,15 @@ export default function DashboardPage() {
         ...w,
         analytics: analyticsData[w.id] || w.analytics
       })));
+
+      // If analytics modal is currently open, keep it in sync live
+      setSelectedAnalyticsWish((current: any) => {
+        if (!current) return null;
+        return {
+          ...current,
+          analytics: analyticsData[current.id] || current.analytics
+        };
+      });
     } catch {
       // Silently fail to avoid disrupting user experience
     }
@@ -69,6 +80,12 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleManualAnalyticsRefresh = async () => {
+    setRefreshingAnalytics(true);
+    await fetchAnalyticsSilent();
+    setTimeout(() => setRefreshingAnalytics(false), 600);
   };
 
   const getFullShareUrl = (slug: string) => {
@@ -108,6 +125,9 @@ export default function DashboardPage() {
           ? { ...w, is_scrubbed: true, recipient_name: "[SCRUBBED]", is_published: false }
           : w
       ));
+      if (selectedAnalyticsWish?.id === wishToDelete.id) {
+        setSelectedAnalyticsWish(null);
+      }
       setWishToDelete(null);
     } catch (err: any) {
       alert("Failed to delete wish: " + err.message);
@@ -124,6 +144,7 @@ export default function DashboardPage() {
         label: "Privacy Scrubbed",
         badgeBg: "bg-slate-900 text-white border-2 border-slate-700",
         pillBg: "bg-slate-100 text-slate-900 border-2 border-slate-400",
+        description: "Photos and letter securely destroyed upon creator request.",
         icon: Lock
       };
     }
@@ -136,6 +157,7 @@ export default function DashboardPage() {
         label: "Loved & Hugged",
         badgeBg: "bg-rose-600 text-white border-2 border-rose-300 shadow-md shadow-rose-600/30",
         pillBg: "bg-rose-100 text-rose-900 border-2 border-rose-400",
+        description: `${wish.recipient_name} opened the celebration and sent back ${hugs} warm ${hugs === 1 ? 'hug' : 'hugs'}!`,
         icon: Heart
       };
     }
@@ -145,6 +167,7 @@ export default function DashboardPage() {
         label: "Link Opened",
         badgeBg: "bg-sky-600 text-white border-2 border-sky-300 shadow-md shadow-sky-600/30",
         pillBg: "bg-sky-100 text-sky-950 border-2 border-sky-400",
+        description: `${wish.recipient_name} has opened and viewed the memory scrapbook.`,
         icon: Eye
       };
     }
@@ -153,6 +176,7 @@ export default function DashboardPage() {
       label: "Awaiting Open",
       badgeBg: "bg-indigo-700 text-white border-2 border-indigo-300 shadow-md shadow-indigo-700/30",
       pillBg: "bg-indigo-100 text-indigo-950 border-2 border-indigo-400",
+      description: "Link created and ready to share with your recipient.",
       icon: Clock
     };
   };
@@ -257,7 +281,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 1. EXECUTIVE 3-COLUMN METRICS GRID (CLEAN, PREMIUM & FOCUSED) ── */}
+      {/* ── 1. EXECUTIVE 3-COLUMN OVERVIEW CARDS ── */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
         
         {/* Metric 1: Total Celebrations (Royal Violet / Indigo) */}
@@ -285,7 +309,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Metric 2: Total Views & Impressions (Electric Emerald / Cyan) */}
+        {/* Metric 2: Total Impressions (Electric Emerald / Cyan) */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -312,7 +336,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Metric 3: Hugs & Reactions (Radiant Crimson / Rose) */}
+        {/* Metric 3: Hugs Received (Radiant Crimson / Rose) */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -340,7 +364,7 @@ export default function DashboardPage() {
         </motion.div>
       </section>
 
-      {/* ── 2. FILTER TABS, SEARCH, AND VIEW CONTROLS (CRISP HIGH-CONTRAST BORDERS) ── */}
+      {/* ── 2. FILTER TABS, SEARCH, AND VIEW CONTROLS ── */}
       <div className="bg-white border-2 border-slate-300 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-3.5">
         
         {/* Top Control Bar */}
@@ -518,7 +542,7 @@ export default function DashboardPage() {
               <Loader2 className="animate-spin text-violet-600" size={24} />
             </div>
           </div>
-          <p className="text-slate-600 text-sm font-bold tracking-wide">Syncing celebrations & engagement...</p>
+          <p className="text-slate-600 text-sm font-bold tracking-wide">Syncing celebrations...</p>
         </div>
       ) : wishes.length === 0 ? (
         /* Empty State */
@@ -555,7 +579,7 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* ── GRID VIEW (AESTHETIC & PREMIUM WITH FOCUSED VIEWS & HUGS) ── */
+        /* ── GRID VIEW (ULTRA-CLEAN, MINIMAL & PROFESSIONAL) ── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
@@ -671,7 +695,6 @@ export default function DashboardPage() {
                           alt={`Memory for ${wish.recipient_name}`} 
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           onError={(e) => {
-                            // Fallback if image fails
                             e.currentTarget.style.display = 'none';
                           }}
                         />
@@ -707,43 +730,6 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── PREMIUM VALUE CAPSULE: VIEWS & WARM HUGS ── */}
-                    <div className="grid grid-cols-2 gap-2.5">
-                      
-                      {/* Left: Live Impressions / Views */}
-                      <div className="bg-sky-50/90 border-2 border-sky-200 hover:border-sky-400 rounded-2xl p-3 flex items-center gap-3 transition-colors">
-                        <div className="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-xs shrink-0">
-                          <Eye size={17} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-lg font-black text-sky-950 leading-none">{views}</span>
-                            <span className="text-[10px] font-black text-sky-700 uppercase">views</span>
-                          </div>
-                          <p className="text-[10px] text-sky-800 font-bold truncate mt-0.5">
-                            {views === 1 ? '1 impression' : 'Live reach'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Right: Emotional Returns / Warm Hugs */}
-                      <div className="bg-rose-50/90 border-2 border-rose-200 hover:border-rose-400 rounded-2xl p-3 flex items-center gap-3 transition-colors">
-                        <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-xs shrink-0">
-                          <Heart size={17} className={hugs > 0 ? "fill-white animate-pulse" : ""} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-lg font-black text-rose-950 leading-none">{hugs}</span>
-                            <span className="text-[10px] font-black text-rose-700 uppercase">hugs</span>
-                          </div>
-                          <p className="text-[10px] text-rose-800 font-bold truncate mt-0.5">
-                            {hugs > 0 ? 'Loved it!' : 'Waiting'}
-                          </p>
-                        </div>
-                      </div>
-
-                    </div>
-
                     {/* Share Link Pill (Touch Friendly) */}
                     <div className="flex items-center justify-between bg-slate-50 border-2 border-slate-300 rounded-2xl p-1.5 pl-3">
                       <span className="text-xs font-mono font-bold text-slate-800 truncate mr-2 select-all">
@@ -764,16 +750,26 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* ── CARD ACTION FOOTER ── */}
+                {/* ── CARD ACTION FOOTER: CLEAN DUAL ACTION (ANALYTICS & PREVIEW) ── */}
                 <div className="p-4 sm:p-5 pt-0">
-                  <div className="pt-3 border-t-2 border-slate-200">
+                  <div className="flex items-center gap-2 pt-3 border-t-2 border-slate-200">
+                    {/* View Analytics Detail Button */}
+                    <button
+                      onClick={() => setSelectedAnalyticsWish(wish)}
+                      className="flex-1 py-3 px-3 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 text-slate-800 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all border-2 border-slate-300 hover:border-violet-300 active:scale-98 shadow-xs"
+                    >
+                      <BarChart3 size={15} className="text-violet-600 shrink-0" />
+                      <span>Analytics</span>
+                    </button>
+
+                    {/* Open Live Preview Button */}
                     <Link 
                       href={`/w/${wish.slug}`}
                       target="_blank"
-                      className="w-full bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-3 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md shadow-pink-500/20 border border-pink-400/40 active:scale-98"
+                      className="flex-1 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-3 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md shadow-pink-500/20 border border-pink-400/40 active:scale-98"
                     >
                       <ExternalLink size={15} />
-                      <span>Preview Live</span>
+                      <span>Preview</span>
                     </Link>
                   </div>
                 </div>
@@ -782,7 +778,7 @@ export default function DashboardPage() {
           })}
         </div>
       ) : (
-        /* ── LIST / TABLE VIEW (FOCUSED ON VIEWS & HUGS) ── */
+        /* ── LIST / TABLE VIEW (CLEAN & PROFESSIONAL) ── */
         <div className="bg-white rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -790,8 +786,6 @@ export default function DashboardPage() {
                 <tr>
                   <th className="py-3.5 px-4 sm:px-5">Recipient & Creator</th>
                   <th className="py-3.5 px-3">Status</th>
-                  <th className="py-3.5 px-4 text-center">Live Views</th>
-                  <th className="py-3.5 px-4 text-center">Hugs Received</th>
                   <th className="py-3.5 px-3">Created Date</th>
                   <th className="py-3.5 px-4 sm:px-5 text-right">Actions</th>
                 </tr>
@@ -825,20 +819,6 @@ export default function DashboardPage() {
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-center">
-                        <span className="px-3 py-1.5 rounded-xl bg-sky-50 text-sky-900 font-black border-2 border-sky-300 inline-flex items-center gap-1">
-                          <Eye size={12} className="text-sky-700" />
-                          {wish.analytics?.view || 0}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4 text-center">
-                        <span className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-900 font-black border-2 border-rose-300 inline-flex items-center gap-1">
-                          <Heart size={12} className="fill-rose-600 text-rose-600" />
-                          {wish.analytics?.hug_sent || 0}
-                        </span>
-                      </td>
-
                       <td className="py-4 px-3 text-slate-600 font-semibold">
                         {date}
                       </td>
@@ -853,6 +833,14 @@ export default function DashboardPage() {
                             }`}
                           >
                             {isCopied ? <Check size={15} /> : <Copy size={15} />}
+                          </button>
+
+                          <button
+                            onClick={() => setSelectedAnalyticsWish(wish)}
+                            title="View Analytics"
+                            className="p-2.5 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
+                          >
+                            <BarChart3 size={15} />
                           </button>
 
                           <Link
@@ -882,7 +870,169 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 4. DELETE CONFIRMATION MODAL ── */}
+      {/* ── 4. DEDICATED DEEP ANALYTICS SHEET / MODAL (TAP TO EXPLORE DETAILS) ── */}
+      <AnimatePresence>
+        {selectedAnalyticsWish && (() => {
+          const status = getWishStatus(selectedAnalyticsWish);
+          const StatusIcon = status.icon;
+          const hugs = selectedAnalyticsWish.analytics?.hug_sent || 0;
+          const views = selectedAnalyticsWish.analytics?.view || 0;
+          const date = new Date(selectedAnalyticsWish.created_at).toLocaleDateString("en-US", {
+            month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"
+          });
+          const isCopied = copiedId === selectedAnalyticsWish.id;
+
+          return (
+            <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-3.5 sm:p-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                className="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl border-2 border-slate-300 space-y-5 max-h-[90vh] overflow-y-auto"
+              >
+                {/* Modal Top Header */}
+                <div className="flex items-start justify-between gap-3 border-b-2 border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 via-pink-500 to-amber-400 p-[2px] shadow-sm shrink-0">
+                      <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-white text-xl">
+                        {selectedAnalyticsWish.theme_overrides?.mascot_emoji || "🎁"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-black text-slate-900">
+                          {selectedAnalyticsWish.recipient_name}&apos;s Analytics
+                        </h3>
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200">
+                          Live
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-bold mt-0.5">
+                        Created by {selectedAnalyticsWish.sender_name} • {date}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedAnalyticsWish(null)}
+                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+                    aria-label="Close Analytics"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Status Callout Banner */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border-2 border-slate-200 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0 ${status.badgeBg}`}>
+                      <StatusIcon size={11} className={status.key === 'hugged' ? 'fill-white animate-pulse' : ''} />
+                      <span>{status.label}</span>
+                    </span>
+                    <p className="text-xs text-slate-700 font-semibold truncate">
+                      {status.description}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleManualAnalyticsRefresh}
+                    disabled={refreshingAnalytics}
+                    title="Refresh Stats"
+                    className="p-2 text-slate-500 hover:text-violet-700 hover:bg-violet-50 rounded-xl transition-colors shrink-0"
+                  >
+                    <RefreshCw size={14} className={refreshingAnalytics ? "animate-spin text-violet-600" : ""} />
+                  </button>
+                </div>
+
+                {/* ── 2 BIG VALUE STAT CARDS: VIEWS & WARM HUGS ── */}
+                <div className="grid grid-cols-2 gap-3.5">
+                  
+                  {/* Total Impressions / Views Card */}
+                  <div className="bg-sky-50 border-2 border-sky-300 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider bg-sky-100 px-2 py-0.5 rounded-md border border-sky-300">
+                        Impressions
+                      </span>
+                      <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-xs">
+                        <Eye size={16} />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black text-sky-950 tracking-tight">{views}</h4>
+                      <p className="text-[11px] text-sky-800 font-bold mt-0.5">
+                        {views === 1 ? '1 unique view' : `${views} live views recorded`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Warm Hugs Received Card */}
+                  <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-rose-800 uppercase tracking-wider bg-rose-100 px-2 py-0.5 rounded-md border border-rose-300">
+                        Emotional Return
+                      </span>
+                      <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-xs">
+                        <Heart size={16} className="fill-white animate-pulse" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black text-rose-950 tracking-tight">{hugs}</h4>
+                      <p className="text-[11px] text-rose-800 font-bold mt-0.5">
+                        {hugs > 0 ? `${hugs} warm hugs sent` : 'Awaiting recipient response'}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Shareable Link Box */}
+                <div className="p-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-1.5">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                    Recipient Access Link
+                  </span>
+                  <div className="flex items-center justify-between gap-2 bg-white border border-slate-300 rounded-xl p-1.5 pl-3">
+                    <span className="text-xs font-mono font-bold text-slate-800 truncate select-all">
+                      {getFullShareUrl(selectedAnalyticsWish.slug)}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(selectedAnalyticsWish.id, selectedAnalyticsWish.slug)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1 shrink-0 transition-all border ${
+                        isCopied 
+                          ? 'bg-emerald-600 text-white border-emerald-700' 
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                      }`}
+                    >
+                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                      {isCopied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom Action Footer */}
+                <div className="flex items-center gap-2.5 pt-2 border-t-2 border-slate-100">
+                  <Link
+                    href={`/w/${selectedAnalyticsWish.slug}`}
+                    target="_blank"
+                    className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all active:scale-95"
+                  >
+                    <ExternalLink size={15} />
+                    <span>Open Celebration Live</span>
+                  </Link>
+
+                  <button
+                    onClick={() => setSelectedAnalyticsWish(null)}
+                    className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl border-2 border-slate-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
+      </AnimatePresence>
+
+      {/* ── 5. DELETE CONFIRMATION MODAL ── */}
       <AnimatePresence>
         {wishToDelete && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
