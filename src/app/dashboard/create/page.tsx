@@ -147,6 +147,7 @@ export const THEME_PRESETS = [
 export const OCCASION_PRESETS = [
   {
     id: "birthday",
+    name: "Birthday",
     label: "🎂 Birthday",
     coverHeadline: "Special Birthday Delivery! 🎁",
     coverSubtitle: "A cute little handmade scrapbook for your special day. Will you accept this gift?",
@@ -190,6 +191,7 @@ export const OCCASION_PRESETS = [
   },
   {
     id: "anniversary",
+    name: "Anniversary",
     label: "💍 Anniversary",
     coverHeadline: "Happy Anniversary! 💍",
     coverSubtitle: "A handmade scrapbook celebrating all our precious moments together.",
@@ -233,6 +235,7 @@ export const OCCASION_PRESETS = [
   },
   {
     id: "love",
+    name: "Romance",
     label: "💖 Romance & Love",
     coverHeadline: "A Special Delivery For My Favorite Person 💖",
     coverSubtitle: "A little love letter and scrapbook made just for you.",
@@ -276,6 +279,7 @@ export const OCCASION_PRESETS = [
   },
   {
     id: "friendship",
+    name: "Friendship",
     label: "🌟 Friendship",
     coverHeadline: "For The Best Friend in the World! 🌟",
     coverSubtitle: "A scrapbook of chaotic memories, silly laughs, and golden moments!",
@@ -319,6 +323,7 @@ export const OCCASION_PRESETS = [
   },
   {
     id: "custom",
+    name: "Special Occasion",
     label: "✍️ Custom Occasion",
     coverHeadline: "Special Delivery for {name}! 🎁",
     coverSubtitle: "A cute little handmade scrapbook made just for you.",
@@ -488,7 +493,7 @@ export default function CreateWishPage() {
       signature: string;
     },
     photos: [] as { image_url: string; caption: string; sort_order: number }[],
-    theme_overrides: { ...THEME_PRESETS[0].theme } as Record<string, any>
+    theme_overrides: { ...THEME_PRESETS[0].theme, occasion_name: "Birthday" } as Record<string, any>
   });
 
   const handleNext = () => {
@@ -567,6 +572,7 @@ export default function CreateWishPage() {
       letter: formattedLetter,
       theme_overrides: {
         ...prev.theme_overrides,
+        occasion_name: occ.name,
         cover_headline: occ.coverHeadline.replace(/\{name\}/gi, repName),
         cover_subtitle: occ.coverSubtitle.replace(/\{name\}/gi, repName),
         photos_button_text: occ.photosButtonText,
@@ -575,6 +581,24 @@ export default function CreateWishPage() {
         finale_emoji: occ.finaleEmoji
       }
     }));
+  };
+
+  const handleCustomOccasionChange = (val: string) => {
+    setSelectedOccasionId("custom");
+    setFormData(prev => {
+      const repName = prev.nickname || prev.recipient_name || "{name}";
+      const defaultName = val || "Special Occasion";
+      return {
+        ...prev,
+        theme_overrides: {
+          ...prev.theme_overrides,
+          occasion_name: val,
+          cover_headline: `Special ${defaultName} Delivery! 🎁`,
+          finale_headline: `Happy ${defaultName} ${repName}! 🎉`,
+          photos_button_text: `Celebrate ${defaultName} ✨`
+        }
+      };
+    });
   };
 
   const handleRecipientNameChange = (val: string) => {
@@ -658,7 +682,7 @@ export default function CreateWishPage() {
         action: "generate_reasons",
         recipient_name: formData.recipient_name || "Friend",
         sender_name: formData.sender_name || "A Friend",
-        occasion: selectedOccasionId,
+        occasion: formData.theme_overrides?.occasion_name || selectedOccasionId,
         relationship: aiRelationship,
         tone: aiTone,
         custom_cues: aiCustomCues,
@@ -695,7 +719,7 @@ export default function CreateWishPage() {
         action: "generate_single_reason",
         recipient_name: formData.recipient_name || "Friend",
         sender_name: formData.sender_name || "A Friend",
-        occasion: selectedOccasionId,
+        occasion: formData.theme_overrides?.occasion_name || selectedOccasionId,
         relationship: aiRelationship,
         tone: aiTone,
         custom_cues: aiCustomCues,
@@ -736,7 +760,7 @@ export default function CreateWishPage() {
         action: "generate_letter",
         recipient_name: formData.recipient_name || "Friend",
         sender_name: formData.sender_name || "A Friend",
-        occasion: selectedOccasionId,
+        occasion: formData.theme_overrides?.occasion_name || selectedOccasionId,
         relationship: aiRelationship,
         tone: aiTone,
         custom_cues: aiCustomCues
@@ -1245,6 +1269,21 @@ export default function CreateWishPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Occasion Name *</label>
+              <input 
+                type="text" 
+                required
+                placeholder="e.g. Raksha Bandhan, Graduation, Farewell..."
+                value={formData.theme_overrides?.occasion_name || ""}
+                onChange={(e) => handleCustomOccasionChange(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 text-sm"
+              />
+              <p className="text-xs text-slate-400 mt-1.5">
+                We use this to customize headings (e.g. "Special Raksha Bandhan Delivery!").
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
