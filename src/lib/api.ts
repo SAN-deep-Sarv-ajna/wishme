@@ -58,7 +58,7 @@ export const api = {
     get: (slug: string) => fetchApi(`/wishes/${slug}`),
     create: (data: any) => fetchApi('/wishes/', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => fetchApi(`/wishes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchApi(`/wishes/${id}`, { method: 'DELETE' }),
+    delete: (id: string, purge: boolean = false) => fetchApi(`/wishes/${id}${purge ? '?purge=true' : ''}`, { method: 'DELETE' }),
   },
   analytics: {
     trackEvent: (data: { wish_id: string, event_type: string }) => fetchApi('/analytics/event', { method: 'POST', body: JSON.stringify(data) }),

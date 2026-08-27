@@ -8,7 +8,8 @@ import {
   Trash2, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
   ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, X,
-  Calendar, UserCheck, Activity, BarChart3, Archive, History, ShieldAlert
+  Calendar, UserCheck, Activity, BarChart3, Archive, History, ShieldAlert,
+  ShieldCheck, AlertTriangle, Flame
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,8 +31,9 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   // Modal states
-  const [wishToDelete, setWishToDelete] = useState<any | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [wishToArchive, setWishToArchive] = useState<any | null>(null);
+  const [wishToPurge, setWishToPurge] = useState<any | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [selectedAnalyticsWish, setSelectedAnalyticsWish] = useState<any | null>(null);
   const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
 
@@ -119,37 +121,55 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!wishToDelete) return;
-    setDeleting(true);
+  // Archive & Conclude celebration (Deactivates link & destroys photos while preserving identity & stats)
+  const handleArchiveConfirm = async () => {
+    if (!wishToArchive) return;
+    setActionLoading(true);
     try {
-      await api.wishes.delete(wishToDelete.id);
-      // Mark as scrubbed in local state so it immediately transitions to History tab
+      await api.wishes.delete(wishToArchive.id, false);
       setWishes(wishes.map(w => 
-        w.id === wishToDelete.id 
-          ? { ...w, is_scrubbed: true, recipient_name: "[SCRUBBED]", is_published: false }
+        w.id === wishToArchive.id 
+          ? { ...w, is_scrubbed: true, is_published: false }
           : w
       ));
-      if (selectedAnalyticsWish?.id === wishToDelete.id) {
+      if (selectedAnalyticsWish?.id === wishToArchive.id) {
         setSelectedAnalyticsWish(null);
       }
-      setWishToDelete(null);
+      setWishToArchive(null);
     } catch (err: any) {
-      alert("Failed to delete wish: " + err.message);
+      alert("Failed to archive celebration: " + err.message);
     } finally {
-      setDeleting(false);
+      setActionLoading(false);
+    }
+  };
+
+  // Hard Purge celebration (Permanently removes record from DB completely)
+  const handlePurgeConfirm = async () => {
+    if (!wishToPurge) return;
+    setActionLoading(true);
+    try {
+      await api.wishes.delete(wishToPurge.id, true);
+      setWishes(wishes.filter(w => w.id !== wishToPurge.id));
+      if (selectedAnalyticsWish?.id === wishToPurge.id) {
+        setSelectedAnalyticsWish(null);
+      }
+      setWishToPurge(null);
+    } catch (err: any) {
+      alert("Failed to permanently purge record: " + err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   // Helper for computing individual wish status & high-contrast boundaries
   const getWishStatus = (wish: any) => {
-    if (wish.is_scrubbed || wish.recipient_name === "[SCRUBBED]") {
+    if (wish.is_scrubbed) {
       return {
         key: "scrubbed",
-        label: "Privacy Destroyed",
+        label: "Archived & Concluded",
         badgeBg: "bg-slate-900 text-white border-2 border-slate-700",
         pillBg: "bg-slate-100 text-slate-900 border-2 border-slate-400",
-        description: "Photos and letter securely destroyed upon creator request.",
+        description: "Public link concluded. Photos & letter permanently destroyed for privacy.",
         icon: Lock
       };
     }
@@ -192,7 +212,7 @@ export default function DashboardPage() {
     const history: any[] = [];
 
     wishes.forEach(w => {
-      if (w.is_scrubbed || w.recipient_name === "[SCRUBBED]") {
+      if (w.is_scrubbed) {
         history.push(w);
       } else {
         active.push(w);
@@ -383,7 +403,7 @@ export default function DashboardPage() {
         </motion.div>
       </section>
 
-      {/* ── 2. TOP SEGMENTED TAB SWITCHER: ACTIVE CELEBRATIONS VS HISTORY & ARCHIVE ── */}
+      {/* ── 2. TOP SEGMENTED TAB SWITCHER: ACTIVE CELEBRATIONS VS HISTORY VAULT ── */}
       <div className="flex items-center justify-between gap-3 border-b-2 border-slate-200 pb-3">
         <div className="flex items-center gap-2 p-1 bg-slate-200/80 rounded-2xl border-2 border-slate-300">
           
@@ -410,15 +430,15 @@ export default function DashboardPage() {
             onClick={() => { setActiveTab("history"); }}
             className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
               activeTab === "history"
-                ? "bg-white text-slate-900 shadow-sm border border-slate-300"
+                ? "bg-slate-900 text-white shadow-sm border border-slate-900"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <History size={16} className={activeTab === "history" ? "text-slate-800" : ""} />
+            <Archive size={16} className={activeTab === "history" ? "text-pink-400" : ""} />
             <span>History & Vault</span>
             {metrics.totalHistory > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                activeTab === "history" ? "bg-slate-900 text-white" : "bg-slate-300/80 text-slate-700"
+                activeTab === "history" ? "bg-pink-600 text-white" : "bg-slate-300/80 text-slate-700"
               }`}>
                 {metrics.totalHistory}
               </span>
@@ -439,7 +459,7 @@ export default function DashboardPage() {
             <input
               id="dashboard-search-input"
               type="text"
-              placeholder={activeTab === "active" ? "Search recipient, sender, or link..." : "Search deleted history records..."}
+              placeholder={activeTab === "active" ? "Search active recipient, occasion, or link..." : "Search archived memories by recipient name..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-slate-50 border-2 border-slate-300 focus:border-violet-600 rounded-2xl text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:outline-none transition-colors shadow-inner"
@@ -580,11 +600,16 @@ export default function DashboardPage() {
 
         {/* History Tab Explainer Banner */}
         {activeTab === "history" && (
-          <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-200 border-2 border-slate-700 flex items-start sm:items-center gap-3">
-            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
-            <p className="text-xs font-semibold leading-relaxed">
-              <span className="font-black text-white">Privacy Vault:</span> Memories deleted by creator have had all photos and personal letters permanently purged. Engagement logs remain for your historical records.
-            </p>
+          <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border-2 border-slate-800 flex items-start sm:items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-start sm:items-center gap-3">
+              <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <h4 className="text-xs font-black text-white">Private Memory Vault & Audit History</h4>
+                <p className="text-[11px] text-slate-400 font-medium leading-snug mt-0.5">
+                  Public links and private photos have been safely deactivated. Your recipient names and past engagement metrics are preserved below.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -624,8 +649,8 @@ export default function DashboardPage() {
         /* History Empty State */
         <div className="bg-white rounded-3xl border-2 border-slate-300 p-8 sm:p-12 text-center max-w-md mx-auto shadow-xs">
           <Archive className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h4 className="text-base font-black text-slate-900">History Vault is Clean</h4>
-          <p className="text-xs text-slate-500 mt-1">You have no deleted or privacy-scrubbed celebrations.</p>
+          <h4 className="text-base font-black text-slate-900">History Vault is Empty</h4>
+          <p className="text-xs text-slate-500 mt-1">When you conclude or archive celebrations, their engagement records will safely reside here.</p>
         </div>
       ) : processedWishes.length === 0 ? (
         /* Filter Empty State */
@@ -646,7 +671,7 @@ export default function DashboardPage() {
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
             const StatusIcon = status.icon;
-            const isScrubbed = status.key === "scrubbed";
+            const isArchived = status.key === "scrubbed";
             const date = new Date(wish.created_at).toLocaleDateString("en-US", {
               month: "short", day: "numeric", year: "numeric"
             });
@@ -659,53 +684,106 @@ export default function DashboardPage() {
               ? resolveImageUrl(wish.photos[0].image_url) 
               : null;
 
-            if (isScrubbed) {
+            if (isArchived) {
               return (
-                <div 
-                  key={wish.id} 
-                  className="bg-slate-900 rounded-3xl border-2 border-slate-700 text-white overflow-hidden shadow-md flex flex-col justify-between"
+                /* ── LUXURY ARCHIVE / VAULT CARD ── */
+                <motion.div 
+                  key={wish.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-950 rounded-3xl border-2 border-slate-800 text-white overflow-hidden shadow-lg flex flex-col justify-between hover:border-slate-700 transition-all"
                 >
                   <div className="p-5 sm:p-6 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="w-11 h-11 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700">
-                        <Lock className="w-5 h-5 text-amber-400" />
+                    
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-xl shrink-0 shadow-inner">
+                          {wish.theme_overrides?.mascot_emoji || "🎁"}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-black text-base sm:text-lg text-white tracking-tight truncate">
+                            For {wish.recipient_name}
+                          </h3>
+                          <p className="text-xs text-slate-400 font-bold truncate">
+                            From <span className="text-slate-200">{wish.sender_name}</span>
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-[10px] font-black tracking-wider uppercase text-amber-300 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-500/40">
-                        Destroyed / Scrubbed
+
+                      <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-600/40 shrink-0">
+                        Archived
                       </span>
                     </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-400 line-through decoration-slate-600">
-                        Private Celebration
-                      </h3>
-                      <p className="text-xs text-slate-400 font-bold mt-0.5">
-                        Created {date}
-                      </p>
+
+                    {/* Occasion & Creation Date */}
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-bold bg-slate-900/90 rounded-2xl px-3.5 py-2 border border-slate-800">
+                      <span className="text-violet-400 uppercase tracking-wide text-[10px] font-black">
+                        {wish.theme_overrides?.theme_name || "Scrapbook"}
+                      </span>
+                      <span>Created {date}</span>
                     </div>
 
+                    {/* Final Engagement Snapshot */}
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-2.5 text-center">
-                        <span className="text-base font-black text-sky-400 block">{views}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Views Recorded</span>
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-center shadow-inner">
+                        <div className="flex items-center justify-center gap-1.5 text-sky-400 mb-0.5">
+                          <Eye size={14} />
+                          <span className="text-lg font-black text-white">{views}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                          Total Views
+                        </span>
                       </div>
-                      <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-2.5 text-center">
-                        <span className="text-base font-black text-rose-400 block">{hugs}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Hugs Received</span>
+
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-center shadow-inner">
+                        <div className="flex items-center justify-center gap-1.5 text-rose-400 mb-0.5">
+                          <Heart size={14} className="fill-rose-500" />
+                          <span className="text-lg font-black text-white">{hugs}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                          Warm Hugs
+                        </span>
                       </div>
                     </div>
-                    
-                    <div className="bg-slate-950/80 rounded-2xl p-3 flex gap-2.5 border border-slate-800">
-                      <ShieldAlert size={15} className="text-amber-400 shrink-0 mt-0.5" />
+
+                    {/* Privacy Guarantee Note */}
+                    <div className="bg-slate-900/60 rounded-2xl p-3 flex gap-2.5 border border-slate-800/80">
+                      <Lock size={14} className="text-amber-400 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                        Photos, letters, and memory media permanently erased for privacy compliance.
+                        Public link disabled. Private photos and letters permanently wiped from cloud storage.
                       </p>
                     </div>
                   </div>
-                </div>
+
+                  {/* Vault Actions */}
+                  <div className="p-4 sm:p-5 pt-0">
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                      {/* View Analytics Detail */}
+                      <button
+                        onClick={() => setSelectedAnalyticsWish(wish)}
+                        className="flex-1 py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all border border-slate-700 active:scale-98"
+                      >
+                        <BarChart3 size={14} className="text-violet-400 shrink-0" />
+                        <span>Analytics</span>
+                      </button>
+
+                      {/* Permanent Purge Button */}
+                      <button
+                        onClick={() => setWishToPurge(wish)}
+                        title="Permanently Purge Record"
+                        className="py-2.5 px-3 bg-rose-950/60 hover:bg-rose-900 text-rose-300 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all border border-rose-800/60 active:scale-98"
+                      >
+                        <Trash2 size={14} />
+                        <span>Purge</span>
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
               );
             }
 
+            /* ── ACTIVE CELEBRATION CARD ── */
             return (
               <motion.div 
                 key={wish.id}
@@ -739,11 +817,11 @@ export default function DashboardPage() {
                         {wish.theme_overrides?.theme_name || "Scrapbook"}
                       </span>
                       <button
-                        onClick={() => setWishToDelete(wish)}
-                        title="Delete & Move to History"
+                        onClick={() => setWishToArchive(wish)}
+                        title="Archive & Conclude Memory"
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                       >
-                        <Trash2 size={15} />
+                        <Archive size={15} />
                       </button>
                     </div>
                   </div>
@@ -857,7 +935,7 @@ export default function DashboardPage() {
               <tbody className="divide-y-2 divide-slate-200 font-bold text-slate-800">
                 {processedWishes.map((wish) => {
                   const status = getWishStatus(wish);
-                  const isScrubbed = status.key === "scrubbed";
+                  const isArchived = status.key === "scrubbed";
                   const isCopied = copiedId === wish.id;
                   const date = new Date(wish.created_at).toLocaleDateString("en-US", {
                     month: "short", day: "numeric", year: "numeric"
@@ -871,8 +949,8 @@ export default function DashboardPage() {
                             {wish.theme_overrides?.mascot_emoji || "🎁"}
                           </div>
                           <div className="min-w-0">
-                            <p className={`font-black text-sm truncate ${isScrubbed ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
-                              {wish.recipient_name}
+                            <p className="font-black text-sm truncate text-slate-900">
+                              For {wish.recipient_name}
                             </p>
                             <p className="text-[11px] text-slate-500 truncate">From {wish.sender_name}</p>
                           </div>
@@ -892,7 +970,7 @@ export default function DashboardPage() {
 
                       <td className="py-4 px-4 sm:px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {!isScrubbed && (
+                          {!isArchived && (
                             <>
                               <button
                                 onClick={() => handleCopy(wish.id, wish.slug)}
@@ -922,18 +1000,32 @@ export default function DashboardPage() {
                               </Link>
 
                               <button
-                                onClick={() => setWishToDelete(wish)}
-                                title="Delete & Move to History"
+                                onClick={() => setWishToArchive(wish)}
+                                title="Archive Memory"
                                 className="p-2.5 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 rounded-xl text-slate-500 border border-slate-300 transition-colors"
                               >
-                                <Trash2 size={15} />
+                                <Archive size={15} />
                               </button>
                             </>
                           )}
-                          {isScrubbed && (
-                            <span className="text-[11px] font-bold text-slate-400 italic">
-                              Permanent Vault
-                            </span>
+                          {isArchived && (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedAnalyticsWish(wish)}
+                                title="View History Analytics"
+                                className="p-2 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
+                              >
+                                <BarChart3 size={14} />
+                              </button>
+
+                              <button
+                                onClick={() => setWishToPurge(wish)}
+                                title="Permanently Purge Record"
+                                className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -951,6 +1043,7 @@ export default function DashboardPage() {
         {selectedAnalyticsWish && (() => {
           const status = getWishStatus(selectedAnalyticsWish);
           const StatusIcon = status.icon;
+          const isArchived = status.key === "scrubbed";
           const hugs = selectedAnalyticsWish.analytics?.hug_sent || 0;
           const views = selectedAnalyticsWish.analytics?.view || 0;
           const date = new Date(selectedAnalyticsWish.created_at).toLocaleDateString("en-US", {
@@ -979,8 +1072,10 @@ export default function DashboardPage() {
                         <h3 className="text-lg font-black text-slate-900">
                           {selectedAnalyticsWish.recipient_name}&apos;s Analytics
                         </h3>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-200">
-                          Live
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                          isArchived ? 'bg-slate-900 text-white' : 'bg-violet-100 text-violet-800 border border-violet-200'
+                        }`}>
+                          {isArchived ? "Archived" : "Live"}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 font-bold mt-0.5">
@@ -1010,14 +1105,16 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <button
-                    onClick={handleManualAnalyticsRefresh}
-                    disabled={refreshingAnalytics}
-                    title="Refresh Stats"
-                    className="p-2 text-slate-500 hover:text-violet-700 hover:bg-violet-50 rounded-xl transition-colors shrink-0"
-                  >
-                    <RefreshCw size={14} className={refreshingAnalytics ? "animate-spin text-violet-600" : ""} />
-                  </button>
+                  {!isArchived && (
+                    <button
+                      onClick={handleManualAnalyticsRefresh}
+                      disabled={refreshingAnalytics}
+                      title="Refresh Stats"
+                      className="p-2 text-slate-500 hover:text-violet-700 hover:bg-violet-50 rounded-xl transition-colors shrink-0"
+                    >
+                      <RefreshCw size={14} className={refreshingAnalytics ? "animate-spin text-violet-600" : ""} />
+                    </button>
+                  )}
                 </div>
 
                 {/* ── 2 BIG VALUE STAT CARDS: VIEWS & WARM HUGS ── */}
@@ -1061,43 +1158,47 @@ export default function DashboardPage() {
 
                 </div>
 
-                {/* Shareable Link Box */}
-                <div className="p-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-1.5">
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                    Recipient Access Link
-                  </span>
-                  <div className="flex items-center justify-between gap-2 bg-white border border-slate-300 rounded-xl p-1.5 pl-3">
-                    <span className="text-xs font-mono font-bold text-slate-800 truncate select-all">
-                      {getFullShareUrl(selectedAnalyticsWish.slug)}
+                {/* Shareable Link Box (Only when active) */}
+                {!isArchived && (
+                  <div className="p-3.5 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-1.5">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                      Recipient Access Link
                     </span>
-                    <button
-                      onClick={() => handleCopy(selectedAnalyticsWish.id, selectedAnalyticsWish.slug)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1 shrink-0 transition-all border ${
-                        isCopied 
-                          ? 'bg-emerald-600 text-white border-emerald-700' 
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                      }`}
-                    >
-                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                      {isCopied ? "Copied!" : "Copy"}
-                    </button>
+                    <div className="flex items-center justify-between gap-2 bg-white border border-slate-300 rounded-xl p-1.5 pl-3">
+                      <span className="text-xs font-mono font-bold text-slate-800 truncate select-all">
+                        {getFullShareUrl(selectedAnalyticsWish.slug)}
+                      </span>
+                      <button
+                        onClick={() => handleCopy(selectedAnalyticsWish.id, selectedAnalyticsWish.slug)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1 shrink-0 transition-all border ${
+                          isCopied 
+                            ? 'bg-emerald-600 text-white border-emerald-700' 
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                        }`}
+                      >
+                        {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                        {isCopied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Bottom Action Footer */}
                 <div className="flex items-center gap-2.5 pt-2 border-t-2 border-slate-100">
-                  <Link
-                    href={`/w/${selectedAnalyticsWish.slug}`}
-                    target="_blank"
-                    className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all active:scale-95"
-                  >
-                    <ExternalLink size={15} />
-                    <span>Open Celebration Live</span>
-                  </Link>
+                  {!isArchived ? (
+                    <Link
+                      href={`/w/${selectedAnalyticsWish.slug}`}
+                      target="_blank"
+                      className="flex-1 py-3 px-4 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all active:scale-95"
+                    >
+                      <ExternalLink size={15} />
+                      <span>Open Celebration Live</span>
+                    </Link>
+                  ) : null}
 
                   <button
                     onClick={() => setSelectedAnalyticsWish(null)}
-                    className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl border-2 border-slate-300 transition-colors"
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl border-2 border-slate-300 transition-colors"
                   >
                     Close
                   </button>
@@ -1108,9 +1209,53 @@ export default function DashboardPage() {
         })()}
       </AnimatePresence>
 
-      {/* ── 6. DELETE CONFIRMATION MODAL ── */}
+      {/* ── 6. ARCHIVE & CONCLUDE CONFIRMATION MODAL ── */}
       <AnimatePresence>
-        {wishToDelete && (
+        {wishToArchive && (
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border-2 border-slate-300 text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-4 border-2 border-amber-300">
+                <Archive size={28} />
+              </div>
+              
+              <h3 className="text-xl font-black text-slate-900 mb-1.5">
+                Archive & Conclude Memory?
+              </h3>
+              
+              <p className="text-xs text-slate-600 mb-6 leading-relaxed font-semibold">
+                This will deactivate the public link for <span className="font-black text-slate-900">{wishToArchive.recipient_name}</span> and permanently erase private photos & letters from the web. The name & past engagement stats will be preserved in your <span className="font-black text-slate-900">History & Vault</span>.
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  disabled={actionLoading}
+                  onClick={() => setWishToArchive(null)}
+                  className="flex-1 py-3 rounded-2xl border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  disabled={actionLoading}
+                  onClick={handleArchiveConfirm}
+                  className="flex-1 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-md shadow-slate-900/20 border border-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : "Archive Memory"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── 7. PERMANENT PURGE (HARD DELETE) CONFIRMATION MODAL ── */}
+      <AnimatePresence>
+        {wishToPurge && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -1123,28 +1268,28 @@ export default function DashboardPage() {
               </div>
               
               <h3 className="text-xl font-black text-slate-900 mb-1.5">
-                Delete & Move to History?
+                Permanently Purge Record?
               </h3>
               
               <p className="text-xs text-slate-600 mb-6 leading-relaxed font-semibold">
-                Are you sure you want to delete the celebration for <span className="font-black text-slate-900">{wishToDelete.recipient_name}</span>? Photos and private messages will be permanently destroyed, and this record will be moved to your <span className="font-bold text-slate-900">History & Vault</span>.
+                Are you sure you want to permanently erase the history record for <span className="font-black text-slate-900">{wishToPurge.recipient_name}</span>? This action cannot be undone and will delete all analytics records forever.
               </p>
               
               <div className="flex items-center gap-3">
                 <button
-                  disabled={deleting}
-                  onClick={() => setWishToDelete(null)}
+                  disabled={actionLoading}
+                  onClick={() => setWishToPurge(null)}
                   className="flex-1 py-3 rounded-2xl border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
                 
                 <button
-                  disabled={deleting}
-                  onClick={handleDeleteConfirm}
+                  disabled={actionLoading}
+                  onClick={handlePurgeConfirm}
                   className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-500/20 border border-rose-500 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  {deleting ? <Loader2 size={16} className="animate-spin" /> : "Delete & Move"}
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : "Purge Forever"}
                 </button>
               </div>
             </motion.div>
