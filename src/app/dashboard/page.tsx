@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { 
   Loader2, Plus, Gift, Eye, AlertCircle, RefreshCw, Copy, Check, 
-  Trash2, QrCode, Download, Heart, Sparkles, ExternalLink, Search, 
+  Trash2, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
   ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen, X,
   Calendar, UserCheck, Image as ImageIcon
@@ -28,7 +28,6 @@ export default function DashboardPage() {
   // Modal states
   const [wishToDelete, setWishToDelete] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [wishForQr, setWishForQr] = useState<any | null>(null);
 
   useEffect(() => {
     loadWishes();
@@ -816,19 +815,11 @@ export default function DashboardPage() {
 
                 {/* ── CARD ACTION FOOTER ── */}
                 <div className="p-4 sm:p-5 pt-0">
-                  <div className="flex items-center gap-2 pt-3 border-t-2 border-slate-200">
-                    <button
-                      onClick={() => setWishForQr(wish)}
-                      title="View QR Code"
-                      className="py-3 px-4 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 border-2 border-slate-300 hover:border-violet-400 text-slate-800 rounded-2xl text-xs font-black flex items-center justify-center transition-all shadow-xs"
-                    >
-                      <QrCode size={17} />
-                    </button>
-                    
+                  <div className="pt-3 border-t-2 border-slate-200">
                     <Link 
                       href={`/w/${wish.slug}`}
                       target="_blank"
-                      className="flex-1 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-3 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md shadow-pink-500/20 border border-pink-400/40 active:scale-98"
+                      className="w-full bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-3 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md shadow-pink-500/20 border border-pink-400/40 active:scale-98"
                     >
                       <ExternalLink size={15} />
                       <span>Preview Live</span>
@@ -919,14 +910,6 @@ export default function DashboardPage() {
                             {isCopied ? <Check size={15} /> : <Copy size={15} />}
                           </button>
 
-                          <button
-                            onClick={() => setWishForQr(wish)}
-                            title="View QR Code"
-                            className="p-2.5 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
-                          >
-                            <QrCode size={15} />
-                          </button>
-
                           <Link
                             href={`/w/${wish.slug}`}
                             target="_blank"
@@ -954,52 +937,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 4. QR CODE MODAL (MOBILE-FRIENDLY & HIGH-CONTRAST) ── */}
-      <AnimatePresence>
-        {wishForQr && (
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border-2 border-slate-300 text-center"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 text-white flex items-center justify-center mx-auto mb-3 shadow-md border border-violet-400">
-                <QrCode size={24} />
-              </div>
-              <h3 className="text-lg font-black text-slate-900">Scan to Open Scrapbook</h3>
-              <p className="text-xs text-slate-600 mt-0.5 mb-5 font-semibold">Personalized for <span className="font-black text-slate-900">{wishForQr.recipient_name}</span></p>
-              
-              <div className="bg-slate-50 p-4 sm:p-5 rounded-3xl border-2 border-slate-300 mb-5 inline-block shadow-inner">
-                <img 
-                  src={api.qr.getUrl(wishForQr.slug)} 
-                  alt="Scrapbook QR Code" 
-                  className="w-48 h-48 mx-auto rounded-xl" 
-                />
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <a
-                  href={api.qr.getUrl(wishForQr.slug)}
-                  download={`${wishForQr.slug}-qr.png`}
-                  target="_blank"
-                  className="flex-1 py-3.5 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 border border-pink-400 active:scale-95 transition-all"
-                >
-                  <Download size={16} /> Download PNG
-                </a>
-                <button
-                  onClick={() => setWishForQr(null)}
-                  className="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl border-2 border-slate-300 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ── 5. DELETE CONFIRMATION MODAL ── */}
+      {/* ── 4. DELETE CONFIRMATION MODAL ── */}
       <AnimatePresence>
         {wishToDelete && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">

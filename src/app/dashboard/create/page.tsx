@@ -8,7 +8,7 @@ import {
   Loader2, ArrowRight, ArrowLeft, Image as ImageIcon, CheckCircle, 
   Plus, Trash2, Copy, ExternalLink, Sparkles, Palette, Sliders, 
   Heart, Music, Play, Pause, Upload, Volume2, VolumeX, Check,
-  Wand2, QrCode, RefreshCw, ChevronDown, ChevronUp, Download, Eye
+  Wand2, RefreshCw, ChevronDown, ChevronUp, Eye
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import imageCompression from "browser-image-compression";
@@ -447,7 +447,6 @@ export default function CreateWishPage() {
   const [error, setError] = useState<string | null>(null);
   const [createdWish, setCreatedWish] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showQrModal, setShowQrModal] = useState(false);
 
   // Selected Presets
   const [selectedPresetId, setSelectedPresetId] = useState("classic");
@@ -1115,7 +1114,6 @@ export default function CreateWishPage() {
   // SUCCESS STATE
   if (createdWish) {
     const fullUrl = getFullShareUrl();
-    const qrUrl = api.qr.getUrl(createdWish.slug);
 
     return (
       <div className="max-w-xl mx-auto py-12 px-4 text-center animate-in zoom-in-95 duration-300">
@@ -1156,23 +1154,16 @@ export default function CreateWishPage() {
               target="_blank"
               className="flex-1 bg-gradient-to-r from-pink-500 to-rose-400 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-pink-200 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <ExternalLink size={16} /> Open
+              <ExternalLink size={16} /> Open Celebration
             </a>
-
-            <button
-              onClick={() => setShowQrModal(true)}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
-            >
-              <QrCode size={16} /> QR Code
-            </button>
             
-            <a
+            <a 
               href={`https://wa.me/?text=${encodeURIComponent(`Hey! I made something special for you! 🎁 ${fullUrl}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
             >
-              WhatsApp
+              Share via WhatsApp
             </a>
           </div>
 
@@ -1183,37 +1174,6 @@ export default function CreateWishPage() {
             ← Return to Dashboard
           </Link>
         </div>
-
-        {/* QR Code Modal */}
-        {showQrModal && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl border border-slate-100 text-center animate-in zoom-in-95">
-              <h3 className="text-lg font-bold text-slate-800 mb-1">Scan or Share QR Code</h3>
-              <p className="text-xs text-slate-500 mb-4">Point any phone camera to open {createdWish.recipient_name}&apos;s scrapbook!</p>
-              
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-4 inline-block">
-                <img src={qrUrl} alt="Wish QR Code" className="w-48 h-48 mx-auto" />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={qrUrl}
-                  download={`${createdWish.slug}-qr.png`}
-                  target="_blank"
-                  className="flex-1 py-2.5 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
-                >
-                  <Download size={14} /> Download QR
-                </a>
-                <button
-                  onClick={() => setShowQrModal(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
