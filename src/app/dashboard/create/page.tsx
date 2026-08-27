@@ -11,6 +11,7 @@ import {
   Wand2, QrCode, RefreshCw, ChevronDown, ChevronUp, Download, Eye
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import imageCompression from "browser-image-compression";
 
 const TEMP_UPLOAD_ID = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `temp_${Date.now()}`;
 
@@ -837,13 +838,31 @@ export default function CreateWishPage() {
     setFormData(prev => ({ ...prev, gift_cards: updated }));
   };
 
+  const compressImage = async (file: File) => {
+    try {
+      const options = {
+        maxSizeMB: 1, // Compress to < 1 MB
+        maxWidthOrHeight: 1200, // Max dimension for UI display
+        useWebWorker: true,
+      };
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.warn("Compression failed, using original file", error);
+      return file;
+    }
+  };
+
   // Card Photo Upload
   const handleCardPhotoUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
+    let file = e.target.files[0];
 
     try {
       setUploadingCardPhotoIdx(index);
+      
+      // Compress the image before uploading to significantly reduce upload time
+      file = await compressImage(file);
+
       const { data: { session } } = await supabase.auth.getSession();
       
       const payload = new FormData();
@@ -916,10 +935,12 @@ export default function CreateWishPage() {
   // Image Upload Handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     
     try {
       setUploadingPhoto(true);
+      file = await compressImage(file);
+
       const { data: { session } } = await supabase.auth.getSession();
       
       const payload = new FormData();
@@ -956,10 +977,12 @@ export default function CreateWishPage() {
   // Recipient Hero Photo Upload Handler
   const handleRecipientPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     
     try {
       setUploadingRecipientPhoto(true);
+      file = await compressImage(file);
+
       const { data: { session } } = await supabase.auth.getSession();
       
       const payload = new FormData();
