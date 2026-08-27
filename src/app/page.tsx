@@ -20,7 +20,7 @@ const OCCASIONS = [
     badgeBg: "bg-rose-500 text-white",
     cardBg: "from-rose-500/20 via-pink-500/10 to-amber-500/10",
     border: "border-rose-300",
-    image: "https://images.unsplash.com/photo-1530103862676-de8892430039?auto=format&fit=crop&q=80&w=600&h=400",
+    image: "/assets/images/cake.png",
     mascot: "🎂",
     details: "12 Photos • 3D Gift Box • Handwritten Letter"
   },
@@ -33,7 +33,7 @@ const OCCASIONS = [
     badgeBg: "bg-pink-600 text-white",
     cardBg: "from-pink-600/20 via-rose-500/10 to-purple-500/10",
     border: "border-pink-300",
-    image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=600&h=400",
+    image: "/assets/images/s1.png",
     mascot: "💖",
     details: "Romantic Playlist • Living Aurora • Hug Counter"
   },
@@ -46,7 +46,7 @@ const OCCASIONS = [
     badgeBg: "bg-indigo-600 text-white",
     cardBg: "from-indigo-600/20 via-sky-500/10 to-emerald-500/10",
     border: "border-indigo-300",
-    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=600&h=400",
+    image: "/assets/images/s2.png",
     mascot: "🎓",
     details: "Memory Timeline • Group Messages • Confetti Burst"
   },
@@ -59,7 +59,7 @@ const OCCASIONS = [
     badgeBg: "bg-amber-600 text-white",
     cardBg: "from-amber-600/20 via-orange-500/10 to-rose-500/10",
     border: "border-amber-300",
-    image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=600&h=400",
+    image: "/assets/images/s3.png",
     mascot: "💌",
     details: "Inside Jokes • Polaroid Stack • Acoustic Soundtrack"
   },
@@ -72,7 +72,7 @@ const OCCASIONS = [
     badgeBg: "bg-emerald-600 text-white",
     cardBg: "from-emerald-600/20 via-teal-500/10 to-amber-500/10",
     border: "border-emerald-300",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=600&h=400",
+    image: "/assets/images/s5.png",
     mascot: "🥂",
     details: "Guest Keepsake • Cinematic Vows • Elegant Gold"
   }
@@ -248,15 +248,35 @@ export default function LandingPage() {
                 className="bg-slate-950/90 rounded-3xl border-2 border-slate-700 p-5 sm:p-8 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center"
               >
                 {/* Left: Visual Preview Window */}
-                <div className="relative rounded-2xl overflow-hidden aspect-[4/3] border-2 border-slate-700 group">
+                <div className={`relative rounded-2xl overflow-hidden aspect-[4/3] border-2 border-slate-700 bg-gradient-to-br ${selectedOccasion.cardBg} group shadow-lg flex items-center justify-center p-4`}>
+                  
+                  {/* Subtle ambient light orb */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10" />
+
+                  {/* Main Occasion Visual Image */}
                   <img 
                     src={selectedOccasion.image} 
                     alt={selectedOccasion.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain sm:object-cover rounded-xl transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      // Fallback gracefully
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex flex-col justify-end p-4">
-                    <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-xl inline-block self-start shadow-md ${selectedOccasion.badgeBg}`}>
-                      {selectedOccasion.tag}
+
+                  {/* Card Mascot & Sparkle Badge Overlay */}
+                  <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-xl shadow-md ${selectedOccasion.badgeBg} flex items-center gap-1`}>
+                      <span>{selectedOccasion.mascot}</span>
+                      <span>{selectedOccasion.tag}</span>
+                    </span>
+                  </div>
+
+                  {/* Interactive Viewer Pill at Bottom */}
+                  <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200">
+                    <span className="truncate">{selectedOccasion.title}</span>
+                    <span className="text-[10px] text-pink-400 font-black shrink-0 flex items-center gap-1">
+                      <Sparkles size={11} /> Interactive
                     </span>
                   </div>
                 </div>
