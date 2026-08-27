@@ -8,11 +8,12 @@ import {
   Trash2, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
   ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, X,
-  Calendar, UserCheck, Activity, BarChart3, LineChart, Sparkle
+  Calendar, UserCheck, Activity, BarChart3, Archive, History, ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type FilterType = "all" | "hugged" | "opened" | "pending" | "scrubbed";
+type MainTab = "active" | "history";
+type FilterType = "all" | "hugged" | "opened" | "pending";
 type SortType = "latest" | "most_hugs" | "most_views" | "name";
 
 export default function DashboardPage() {
@@ -21,6 +22,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Tab & Filters
+  const [activeTab, setActiveTab] = useState<MainTab>("active");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("latest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -120,6 +124,7 @@ export default function DashboardPage() {
     setDeleting(true);
     try {
       await api.wishes.delete(wishToDelete.id);
+      // Mark as scrubbed in local state so it immediately transitions to History tab
       setWishes(wishes.map(w => 
         w.id === wishToDelete.id 
           ? { ...w, is_scrubbed: true, recipient_name: "[SCRUBBED]", is_published: false }
@@ -141,7 +146,7 @@ export default function DashboardPage() {
     if (wish.is_scrubbed || wish.recipient_name === "[SCRUBBED]") {
       return {
         key: "scrubbed",
-        label: "Privacy Scrubbed",
+        label: "Privacy Destroyed",
         badgeBg: "bg-slate-900 text-white border-2 border-slate-700",
         pillBg: "bg-slate-100 text-slate-900 border-2 border-slate-400",
         description: "Photos and letter securely destroyed upon creator request.",
@@ -181,26 +186,39 @@ export default function DashboardPage() {
     };
   };
 
-  // Aggregated analytics metrics (Focused purely on Celebrations, Views, Hugs)
+  // Segregate Active vs History
+  const { activeWishes, historyWishes } = useMemo(() => {
+    const active: any[] = [];
+    const history: any[] = [];
+
+    wishes.forEach(w => {
+      if (w.is_scrubbed || w.recipient_name === "[SCRUBBED]") {
+        history.push(w);
+      } else {
+        active.push(w);
+      }
+    });
+
+    return { activeWishes: active, historyWishes: history };
+  }, [wishes]);
+
+  // Aggregated analytics metrics for Active Celebrations
   const metrics = useMemo(() => {
-    const totalWishes = wishes.length;
+    const totalActive = activeWishes.length;
     let totalViews = 0;
     let totalHugs = 0;
     let huggedCount = 0;
     let openedCount = 0;
     let pendingCount = 0;
-    let scrubbedCount = 0;
 
-    wishes.forEach(w => {
+    activeWishes.forEach(w => {
       const v = w.analytics?.view || 0;
       const h = w.analytics?.hug_sent || 0;
       
       totalViews += v;
       totalHugs += h;
 
-      if (w.is_scrubbed || w.recipient_name === "[SCRUBBED]") {
-        scrubbedCount++;
-      } else if (h > 0) {
+      if (h > 0) {
         huggedCount++;
       } else if (v > 0) {
         openedCount++;
@@ -210,19 +228,20 @@ export default function DashboardPage() {
     });
 
     return { 
-      totalWishes, 
+      totalActive, 
       totalViews, 
       totalHugs, 
       huggedCount,
       openedCount,
       pendingCount,
-      scrubbedCount
+      totalHistory: historyWishes.length
     };
-  }, [wishes]);
+  }, [activeWishes, historyWishes]);
 
-  // Filtered & Sorted wishes
+  // Filtered & Sorted wishes according to selected Main Tab
   const processedWishes = useMemo(() => {
-    let result = [...wishes];
+    const baseList = activeTab === "active" ? activeWishes : historyWishes;
+    let result = [...baseList];
 
     // Search filter
     if (searchQuery.trim()) {
@@ -234,8 +253,8 @@ export default function DashboardPage() {
       );
     }
 
-    // Filter chip selection
-    if (activeFilter !== "all") {
+    // Filter chip selection (Only for active tab)
+    if (activeTab === "active" && activeFilter !== "all") {
       result = result.filter(w => {
         const st = getWishStatus(w);
         return st.key === activeFilter;
@@ -260,7 +279,7 @@ export default function DashboardPage() {
     });
 
     return result;
-  }, [wishes, searchQuery, activeFilter, sortBy]);
+  }, [activeTab, activeWishes, historyWishes, searchQuery, activeFilter, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
@@ -281,10 +300,10 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 1. EXECUTIVE 3-COLUMN OVERVIEW CARDS ── */}
+      {/* ── 1. EXECUTIVE 3-COLUMN OVERVIEW CARDS (FOR ACTIVE CELEBRATIONS) ── */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
         
-        {/* Metric 1: Total Celebrations (Royal Violet / Indigo) */}
+        {/* Metric 1: Active Celebrations (Royal Violet / Indigo) */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -293,15 +312,15 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-black text-violet-800 tracking-wider uppercase bg-violet-100 px-2.5 py-1 rounded-lg border border-violet-300">
-              Celebrations
+              Active Celebrations
             </span>
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-violet-400">
               <Gift size={20} />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalWishes}</h3>
-            <span className="text-xs text-violet-700 font-extrabold">scrapbooks</span>
+            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalActive}</h3>
+            <span className="text-xs text-violet-700 font-extrabold">living links</span>
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 font-bold truncate">
             <span className="w-2 h-2 rounded-full bg-violet-600 shrink-0" />
@@ -364,7 +383,51 @@ export default function DashboardPage() {
         </motion.div>
       </section>
 
-      {/* ── 2. FILTER TABS, SEARCH, AND VIEW CONTROLS ── */}
+      {/* ── 2. TOP SEGMENTED TAB SWITCHER: ACTIVE CELEBRATIONS VS HISTORY & ARCHIVE ── */}
+      <div className="flex items-center justify-between gap-3 border-b-2 border-slate-200 pb-3">
+        <div className="flex items-center gap-2 p-1 bg-slate-200/80 rounded-2xl border-2 border-slate-300">
+          
+          {/* Tab 1: Active Celebrations */}
+          <button
+            onClick={() => { setActiveTab("active"); setActiveFilter("all"); }}
+            className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+              activeTab === "active"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-300"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Gift size={16} className={activeTab === "active" ? "text-violet-600" : ""} />
+            <span>Active Celebrations</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+              activeTab === "active" ? "bg-violet-100 text-violet-800" : "bg-slate-300/80 text-slate-700"
+            }`}>
+              {metrics.totalActive}
+            </span>
+          </button>
+
+          {/* Tab 2: Deleted / History Archive */}
+          <button
+            onClick={() => { setActiveTab("history"); }}
+            className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+              activeTab === "history"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-300"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <History size={16} className={activeTab === "history" ? "text-slate-800" : ""} />
+            <span>History & Vault</span>
+            {metrics.totalHistory > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === "history" ? "bg-slate-900 text-white" : "bg-slate-300/80 text-slate-700"
+              }`}>
+                {metrics.totalHistory}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 3. FILTER TABS, SEARCH, AND VIEW CONTROLS ── */}
       <div className="bg-white border-2 border-slate-300 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-3.5">
         
         {/* Top Control Bar */}
@@ -376,7 +439,7 @@ export default function DashboardPage() {
             <input
               id="dashboard-search-input"
               type="text"
-              placeholder="Search recipient, sender, or link..."
+              placeholder={activeTab === "active" ? "Search recipient, sender, or link..." : "Search deleted history records..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-slate-50 border-2 border-slate-300 focus:border-violet-600 rounded-2xl text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:outline-none transition-colors shadow-inner"
@@ -438,103 +501,95 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Horizontal Scrollable Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-extrabold scroll-smooth">
-          
-          {/* Chip 1: All */}
-          <button
-            onClick={() => setActiveFilter("all")}
-            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-              activeFilter === "all"
-                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-50"
-            }`}
-          >
-            <span>All Celebrations</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeFilter === "all" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-800"
-            }`}>
-              {wishes.length}
-            </span>
-          </button>
-
-          {/* Chip 2: Loved & Hugged (Rose) */}
-          <button
-            onClick={() => setActiveFilter("hugged")}
-            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-              activeFilter === "hugged"
-                ? "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-500/20"
-                : "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
-            }`}
-          >
-            <Heart size={13} className={activeFilter === "hugged" ? "fill-white" : "fill-rose-600"} />
-            <span>Loved & Hugged</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeFilter === "hugged" ? "bg-white/20 text-white" : "bg-rose-200 text-rose-900"
-            }`}>
-              {metrics.huggedCount}
-            </span>
-          </button>
-
-          {/* Chip 3: Link Opened (Sky) */}
-          <button
-            onClick={() => setActiveFilter("opened")}
-            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-              activeFilter === "opened"
-                ? "bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/20"
-                : "bg-sky-50 text-sky-900 border-sky-300 hover:bg-sky-100"
-            }`}
-          >
-            <Eye size={13} />
-            <span>Viewed & Active</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeFilter === "opened" ? "bg-white/20 text-white" : "bg-sky-200 text-sky-950"
-            }`}>
-              {metrics.openedCount}
-            </span>
-          </button>
-
-          {/* Chip 4: Awaiting View (Indigo) */}
-          <button
-            onClick={() => setActiveFilter("pending")}
-            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-              activeFilter === "pending"
-                ? "bg-indigo-700 text-white border-indigo-700 shadow-sm shadow-indigo-500/20"
-                : "bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100"
-            }`}
-          >
-            <Clock size={13} />
-            <span>Awaiting View</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeFilter === "pending" ? "bg-white/20 text-white" : "bg-indigo-200 text-indigo-950"
-            }`}>
-              {metrics.pendingCount}
-            </span>
-          </button>
-
-          {/* Chip 5: Privacy Scrubbed (Slate) */}
-          {metrics.scrubbedCount > 0 && (
+        {/* Filter Chips (Rendered exclusively for Active Celebrations) */}
+        {activeTab === "active" && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-extrabold scroll-smooth">
+            
+            {/* Chip 1: All Active */}
             <button
-              onClick={() => setActiveFilter("scrubbed")}
+              onClick={() => setActiveFilter("all")}
               className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-                activeFilter === "scrubbed"
-                  ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                  : "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
+                activeFilter === "all"
+                  ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                  : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-50"
               }`}
             >
-              <Lock size={13} />
-              <span>Scrubbed</span>
+              <span>All Active</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                activeFilter === "scrubbed" ? "bg-white/20 text-white" : "bg-slate-300 text-slate-900"
+                activeFilter === "all" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-800"
               }`}>
-                {metrics.scrubbedCount}
+                {metrics.totalActive}
               </span>
             </button>
-          )}
-        </div>
+
+            {/* Chip 2: Loved & Hugged (Rose) */}
+            <button
+              onClick={() => setActiveFilter("hugged")}
+              className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
+                activeFilter === "hugged"
+                  ? "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-500/20"
+                  : "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
+              }`}
+            >
+              <Heart size={13} className={activeFilter === "hugged" ? "fill-white" : "fill-rose-600"} />
+              <span>Loved & Hugged</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                activeFilter === "hugged" ? "bg-white/20 text-white" : "bg-rose-200 text-rose-900"
+              }`}>
+                {metrics.huggedCount}
+              </span>
+            </button>
+
+            {/* Chip 3: Link Opened (Sky) */}
+            <button
+              onClick={() => setActiveFilter("opened")}
+              className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
+                activeFilter === "opened"
+                  ? "bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/20"
+                  : "bg-sky-50 text-sky-900 border-sky-300 hover:bg-sky-100"
+              }`}
+            >
+              <Eye size={13} />
+              <span>Viewed & Active</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                activeFilter === "opened" ? "bg-white/20 text-white" : "bg-sky-200 text-sky-950"
+              }`}>
+                {metrics.openedCount}
+              </span>
+            </button>
+
+            {/* Chip 4: Awaiting View (Indigo) */}
+            <button
+              onClick={() => setActiveFilter("pending")}
+              className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
+                activeFilter === "pending"
+                  ? "bg-indigo-700 text-white border-indigo-700 shadow-sm shadow-indigo-500/20"
+                  : "bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100"
+              }`}
+            >
+              <Clock size={13} />
+              <span>Awaiting View</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                activeFilter === "pending" ? "bg-white/20 text-white" : "bg-indigo-200 text-indigo-950"
+              }`}>
+                {metrics.pendingCount}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* History Tab Explainer Banner */}
+        {activeTab === "history" && (
+          <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-200 border-2 border-slate-700 flex items-start sm:items-center gap-3">
+            <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+            <p className="text-xs font-semibold leading-relaxed">
+              <span className="font-black text-white">Privacy Vault:</span> Memories deleted by creator have had all photos and personal letters permanently purged. Engagement logs remain for your historical records.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* ── 3. MAIN CARDS VIEW OR LIST VIEW ── */}
+      {/* ── 4. MAIN CONTENT VIEW (CARDS OR LIST) ── */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 animate-spin flex items-center justify-center p-[2px]">
@@ -542,10 +597,10 @@ export default function DashboardPage() {
               <Loader2 className="animate-spin text-violet-600" size={24} />
             </div>
           </div>
-          <p className="text-slate-600 text-sm font-bold tracking-wide">Syncing celebrations...</p>
+          <p className="text-slate-600 text-sm font-bold tracking-wide">Syncing celebration studio...</p>
         </div>
-      ) : wishes.length === 0 ? (
-        /* Empty State */
+      ) : activeTab === "active" && activeWishes.length === 0 ? (
+        /* Active Empty State */
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -554,7 +609,7 @@ export default function DashboardPage() {
           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-violet-100 via-pink-100 to-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-5 border-2 border-slate-200">
             <Gift className="text-violet-600" size={40} />
           </div>
-          <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No Celebrations Created Yet</h3>
+          <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No Active Celebrations</h3>
           <p className="text-slate-600 text-xs sm:text-sm mb-7 leading-relaxed max-w-md mx-auto">
             Design a magical, personalized interactive scrapbook with living auroras, 3D gift unboxing, music, and memories.
           </p>
@@ -565,12 +620,19 @@ export default function DashboardPage() {
             <Plus size={18} /> Create Your First Scrapbook
           </Link>
         </motion.div>
+      ) : activeTab === "history" && historyWishes.length === 0 ? (
+        /* History Empty State */
+        <div className="bg-white rounded-3xl border-2 border-slate-300 p-8 sm:p-12 text-center max-w-md mx-auto shadow-xs">
+          <Archive className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h4 className="text-base font-black text-slate-900">History Vault is Clean</h4>
+          <p className="text-xs text-slate-500 mt-1">You have no deleted or privacy-scrubbed celebrations.</p>
+        </div>
       ) : processedWishes.length === 0 ? (
         /* Filter Empty State */
         <div className="bg-white rounded-3xl border-2 border-slate-300 p-8 text-center max-w-md mx-auto shadow-xs">
           <Inbox className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <h4 className="text-base font-black text-slate-900">No celebrations found</h4>
-          <p className="text-xs text-slate-500 mt-1">Try tweaking your search term or selecting a different filter.</p>
+          <h4 className="text-base font-black text-slate-900">No matching records found</h4>
+          <p className="text-xs text-slate-500 mt-1">Try tweaking your search term or resetting your filter.</p>
           <button
             onClick={() => { setSearchQuery(""); setActiveFilter("all"); }}
             className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-xl border border-slate-300 transition-colors"
@@ -579,7 +641,7 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* ── GRID VIEW (ULTRA-CLEAN, MINIMAL & PROFESSIONAL) ── */
+        /* ── GRID VIEW (ACTIVE OR HISTORY) ── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
@@ -601,40 +663,42 @@ export default function DashboardPage() {
               return (
                 <div 
                   key={wish.id} 
-                  className="bg-slate-50 rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs flex flex-col justify-between opacity-80"
+                  className="bg-slate-900 rounded-3xl border-2 border-slate-700 text-white overflow-hidden shadow-md flex flex-col justify-between"
                 >
-                  <div className="p-5 sm:p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-11 h-11 bg-slate-200 rounded-2xl flex items-center justify-center border border-slate-300">
-                        <Lock className="w-5 h-5 text-slate-500" />
+                  <div className="p-5 sm:p-6 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="w-11 h-11 bg-slate-800 rounded-2xl flex items-center justify-center border border-slate-700">
+                        <Lock className="w-5 h-5 text-amber-400" />
                       </div>
-                      <span className="text-[10px] font-black tracking-wider uppercase text-slate-600 bg-slate-200 px-3 py-1 rounded-full border border-slate-400">
+                      <span className="text-[10px] font-black tracking-wider uppercase text-amber-300 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-500/40">
                         Destroyed / Scrubbed
                       </span>
                     </div>
                     
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-500 line-through decoration-slate-400">
-                      Private Memory
-                    </h3>
-                    <p className="text-xs text-slate-400 font-bold mb-4">
-                      Created {date}
-                    </p>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-400 line-through decoration-slate-600">
+                        Private Celebration
+                      </h3>
+                      <p className="text-xs text-slate-400 font-bold mt-0.5">
+                        Created {date}
+                      </p>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="bg-white border-2 border-slate-200 rounded-2xl p-2.5 text-center">
-                        <span className="text-base sm:text-lg font-black text-slate-700 block">{views}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Views</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-2.5 text-center">
+                        <span className="text-base font-black text-sky-400 block">{views}</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Views Recorded</span>
                       </div>
-                      <div className="bg-white border-2 border-slate-200 rounded-2xl p-2.5 text-center">
-                        <span className="text-base sm:text-lg font-black text-slate-700 block">{hugs}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Hugs</span>
+                      <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-2.5 text-center">
+                        <span className="text-base font-black text-rose-400 block">{hugs}</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Hugs Received</span>
                       </div>
                     </div>
                     
-                    <div className="bg-slate-200/70 rounded-2xl p-3 flex gap-2.5 border border-slate-300">
-                      <Lock size={14} className="text-slate-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-slate-700 font-semibold leading-relaxed">
-                        Photos and personal letter destroyed permanently upon user request.
+                    <div className="bg-slate-950/80 rounded-2xl p-3 flex gap-2.5 border border-slate-800">
+                      <ShieldAlert size={15} className="text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                        Photos, letters, and memory media permanently erased for privacy compliance.
                       </p>
                     </div>
                   </div>
@@ -676,7 +740,7 @@ export default function DashboardPage() {
                       </span>
                       <button
                         onClick={() => setWishToDelete(wish)}
-                        title="Delete Scrapbook"
+                        title="Delete & Move to History"
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                       >
                         <Trash2 size={15} />
@@ -778,7 +842,7 @@ export default function DashboardPage() {
           })}
         </div>
       ) : (
-        /* ── LIST / TABLE VIEW (CLEAN & PROFESSIONAL) ── */
+        /* ── LIST / TABLE VIEW ── */
         <div className="bg-white rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -793,6 +857,7 @@ export default function DashboardPage() {
               <tbody className="divide-y-2 divide-slate-200 font-bold text-slate-800">
                 {processedWishes.map((wish) => {
                   const status = getWishStatus(wish);
+                  const isScrubbed = status.key === "scrubbed";
                   const isCopied = copiedId === wish.id;
                   const date = new Date(wish.created_at).toLocaleDateString("en-US", {
                     month: "short", day: "numeric", year: "numeric"
@@ -806,7 +871,9 @@ export default function DashboardPage() {
                             {wish.theme_overrides?.mascot_emoji || "🎁"}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-black text-slate-900 text-sm truncate">{wish.recipient_name}</p>
+                            <p className={`font-black text-sm truncate ${isScrubbed ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                              {wish.recipient_name}
+                            </p>
                             <p className="text-[11px] text-slate-500 truncate">From {wish.sender_name}</p>
                           </div>
                         </div>
@@ -825,40 +892,49 @@ export default function DashboardPage() {
 
                       <td className="py-4 px-4 sm:px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleCopy(wish.id, wish.slug)}
-                            title="Copy Link"
-                            className={`p-2.5 rounded-xl text-xs font-black transition-colors border ${
-                              isCopied ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                            }`}
-                          >
-                            {isCopied ? <Check size={15} /> : <Copy size={15} />}
-                          </button>
+                          {!isScrubbed && (
+                            <>
+                              <button
+                                onClick={() => handleCopy(wish.id, wish.slug)}
+                                title="Copy Link"
+                                className={`p-2.5 rounded-xl text-xs font-black transition-colors border ${
+                                  isCopied ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                                }`}
+                              >
+                                {isCopied ? <Check size={15} /> : <Copy size={15} />}
+                              </button>
 
-                          <button
-                            onClick={() => setSelectedAnalyticsWish(wish)}
-                            title="View Analytics"
-                            className="p-2.5 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
-                          >
-                            <BarChart3 size={15} />
-                          </button>
+                              <button
+                                onClick={() => setSelectedAnalyticsWish(wish)}
+                                title="View Analytics"
+                                className="p-2.5 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
+                              >
+                                <BarChart3 size={15} />
+                              </button>
 
-                          <Link
-                            href={`/w/${wish.slug}`}
-                            target="_blank"
-                            title="Preview Live"
-                            className="p-2.5 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl shadow-xs hover:opacity-90 border border-pink-400 transition-opacity"
-                          >
-                            <ExternalLink size={15} />
-                          </Link>
+                              <Link
+                                href={`/w/${wish.slug}`}
+                                target="_blank"
+                                title="Preview Live"
+                                className="p-2.5 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl shadow-xs hover:opacity-90 border border-pink-400 transition-opacity"
+                              >
+                                <ExternalLink size={15} />
+                              </Link>
 
-                          <button
-                            onClick={() => setWishToDelete(wish)}
-                            title="Delete"
-                            className="p-2.5 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 rounded-xl text-slate-500 border border-slate-300 transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                              <button
+                                onClick={() => setWishToDelete(wish)}
+                                title="Delete & Move to History"
+                                className="p-2.5 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 rounded-xl text-slate-500 border border-slate-300 transition-colors"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          )}
+                          {isScrubbed && (
+                            <span className="text-[11px] font-bold text-slate-400 italic">
+                              Permanent Vault
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -870,7 +946,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 4. DEDICATED DEEP ANALYTICS SHEET / MODAL (TAP TO EXPLORE DETAILS) ── */}
+      {/* ── 5. DEDICATED DEEP ANALYTICS SHEET / MODAL ── */}
       <AnimatePresence>
         {selectedAnalyticsWish && (() => {
           const status = getWishStatus(selectedAnalyticsWish);
@@ -1032,7 +1108,7 @@ export default function DashboardPage() {
         })()}
       </AnimatePresence>
 
-      {/* ── 5. DELETE CONFIRMATION MODAL ── */}
+      {/* ── 6. DELETE CONFIRMATION MODAL ── */}
       <AnimatePresence>
         {wishToDelete && (
           <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -1047,11 +1123,11 @@ export default function DashboardPage() {
               </div>
               
               <h3 className="text-xl font-black text-slate-900 mb-1.5">
-                Delete Celebration?
+                Delete & Move to History?
               </h3>
               
               <p className="text-xs text-slate-600 mb-6 leading-relaxed font-semibold">
-                Are you sure you want to permanently delete the scrapbook for <span className="font-black text-slate-900">{wishToDelete.recipient_name}</span>? The share link and photos will become inaccessible.
+                Are you sure you want to delete the celebration for <span className="font-black text-slate-900">{wishToDelete.recipient_name}</span>? Photos and private messages will be permanently destroyed, and this record will be moved to your <span className="font-bold text-slate-900">History & Vault</span>.
               </p>
               
               <div className="flex items-center gap-3">
@@ -1068,7 +1144,7 @@ export default function DashboardPage() {
                   onClick={handleDeleteConfirm}
                   className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-500/20 border border-rose-500 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  {deleting ? <Loader2 size={16} className="animate-spin" /> : "Delete Forever"}
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : "Delete & Move"}
                 </button>
               </div>
             </motion.div>
