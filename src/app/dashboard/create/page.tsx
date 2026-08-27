@@ -541,30 +541,84 @@ export default function CreateWishPage() {
   // Occasion Selection
   const handleOccasionSelect = (occ: typeof OCCASION_PRESETS[0]) => {
     setSelectedOccasionId(occ.id);
-    const repName = formData.recipient_name || "{name}";
-    const sender = formData.sender_name || "{sender}";
+    const repName = (formData.nickname || formData.recipient_name || "").trim() || "{name}";
+    const sender = (formData.sender_name || "").trim() || "{sender}";
     
     // Format default letter with recipient name
     const formattedLetter = {
-      greeting: occ.defaultLetter.greeting.replace("{name}", repName),
-      paragraphs: occ.defaultLetter.paragraphs.map(p => p.replace("{name}", repName)),
+      greeting: occ.defaultLetter.greeting.replace(/\{name\}/gi, repName),
+      paragraphs: occ.defaultLetter.paragraphs.map(p => p.replace(/\{name\}/gi, repName)),
       signoff: occ.defaultLetter.signoff,
-      signature: occ.defaultLetter.signature.replace("{sender}", sender)
+      signature: occ.defaultLetter.signature.replace(/\{sender\}/gi, sender)
     };
 
     setFormData(prev => ({
       ...prev,
-      gift_cards: occ.defaultGiftCards.map(c => ({ ...c })),
+      gift_cards: occ.defaultGiftCards.map(c => ({
+        ...c,
+        title: c.title.replace(/\{name\}/gi, repName),
+        body_text: c.body_text.replace(/\{name\}/gi, repName)
+      })),
       letter: formattedLetter,
       theme_overrides: {
         ...prev.theme_overrides,
-        cover_headline: occ.coverHeadline.replace("{name}", repName),
-        cover_subtitle: occ.coverSubtitle,
-        finale_headline: occ.finaleHeadline.replace("{name}", repName),
-        finale_subtitle: occ.finaleSubtitle,
+        cover_headline: occ.coverHeadline.replace(/\{name\}/gi, repName),
+        cover_subtitle: occ.coverSubtitle.replace(/\{name\}/gi, repName),
+        finale_headline: occ.finaleHeadline.replace(/\{name\}/gi, repName),
+        finale_subtitle: occ.finaleSubtitle.replace(/\{name\}/gi, repName),
         finale_emoji: occ.finaleEmoji
       }
     }));
+  };
+
+  const handleRecipientNameChange = (val: string) => {
+    setFormData(prev => {
+      const prevName = prev.nickname || prev.recipient_name;
+      let newGreeting = prev.letter.greeting;
+      if (newGreeting.includes("{name}")) {
+        newGreeting = newGreeting.replace(/\{name\}/gi, val || "{name}");
+      } else if (prevName && newGreeting.includes(prevName)) {
+        newGreeting = newGreeting.replace(new RegExp(prevName, "gi"), val || "{name}");
+      } else if (!newGreeting || newGreeting === "Dear ," || newGreeting === "Dear {name},") {
+        newGreeting = `Dear ${val || "{name}"},`;
+      }
+
+      return {
+        ...prev,
+        recipient_name: val,
+        letter: {
+          ...prev.letter,
+          greeting: newGreeting
+        }
+      };
+    });
+  };
+
+  const handleNicknameChange = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      nickname: val
+    }));
+  };
+
+  const handleSenderNameChange = (val: string) => {
+    setFormData(prev => {
+      const prevSender = prev.sender_name;
+      let newSig = prev.letter.signature;
+      if (newSig.includes("{sender}")) {
+        newSig = newSig.replace(/\{sender\}/gi, val || "{sender}");
+      } else if (prevSender && newSig.includes(prevSender)) {
+        newSig = newSig.replace(new RegExp(prevSender, "gi"), val || "{sender}");
+      }
+      return {
+        ...prev,
+        sender_name: val,
+        letter: {
+          ...prev.letter,
+          signature: newSig
+        }
+      };
+    });
   };
 
   // Audio Preset Selection
@@ -941,7 +995,44 @@ export default function CreateWishPage() {
     try {
       setLoading(true);
       setError(null);
-      const wish = await api.wishes.create(formData);
+
+      const repName = (formData.nickname || formData.recipient_name || "").trim() || "Friend";
+      const sender = (formData.sender_name || "").trim() || "A Friend";
+
+      const cleanText = (txt?: string | null): string => {
+        if (!txt) return "";
+        return txt
+          .replace(/\{name\}|\{recipient\}|\{recipient_name\}|\[name\]/gi, repName)
+          .replace(/\{sender\}|\{sender_name\}|\[sender\]/gi, sender);
+      };
+
+      const finalFormData = {
+        ...formData,
+        recipient_name: formData.recipient_name.trim(),
+        sender_name: formData.sender_name.trim(),
+        nickname: formData.nickname ? formData.nickname.trim() : null,
+        letter: {
+          greeting: cleanText(formData.letter.greeting) || `Dear ${repName},`,
+          paragraphs: (formData.letter.paragraphs || []).map(p => cleanText(p)).filter(Boolean),
+          signoff: cleanText(formData.letter.signoff) || "Happy Birthday!",
+          signature: cleanText(formData.letter.signature) || sender
+        },
+        gift_cards: (formData.gift_cards || []).map(card => ({
+          ...card,
+          badge: cleanText(card.badge) || card.badge,
+          title: cleanText(card.title) || card.title,
+          body_text: cleanText(card.body_text) || card.body_text
+        })),
+        theme_overrides: {
+          ...formData.theme_overrides,
+          cover_headline: cleanText(formData.theme_overrides?.cover_headline) || `Special Delivery for ${repName}! 🎁`,
+          cover_subtitle: cleanText(formData.theme_overrides?.cover_subtitle) || "A cute little handmade scrapbook for your special day. Will you accept this gift?",
+          finale_headline: cleanText(formData.theme_overrides?.finale_headline) || `Happy Birthday ${repName}! 🎉`,
+          finale_subtitle: cleanText(formData.theme_overrides?.finale_subtitle) || "May this year be filled with endless joy, laughter, and magical adventures!"
+        }
+      };
+
+      const wish = await api.wishes.create(finalFormData);
       setCreatedWish(wish);
     } catch (err: any) {
       setError(err.message || "Failed to create wish.");
@@ -1157,7 +1248,7 @@ export default function CreateWishPage() {
                   required
                   placeholder="e.g. Sonali"
                   value={formData.recipient_name}
-                  onChange={(e) => setFormData({...formData, recipient_name: e.target.value})}
+                  onChange={(e) => handleRecipientNameChange(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 text-sm"
                 />
               </div>
@@ -1168,7 +1259,7 @@ export default function CreateWishPage() {
                   type="text" 
                   placeholder="e.g. Sona / Bestie"
                   value={formData.nickname}
-                  onChange={(e) => setFormData({...formData, nickname: e.target.value})}
+                  onChange={(e) => handleNicknameChange(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 text-sm"
                 />
               </div>
@@ -1181,7 +1272,7 @@ export default function CreateWishPage() {
                 required
                 placeholder="e.g. Abhinav"
                 value={formData.sender_name}
-                onChange={(e) => setFormData({...formData, sender_name: e.target.value})}
+                onChange={(e) => handleSenderNameChange(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-slate-900 text-sm"
               />
             </div>

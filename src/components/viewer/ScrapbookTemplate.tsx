@@ -143,7 +143,18 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
 
   const photos = (wish.photos || []).sort((a, b) => a.sort_order - b.sort_order);
   const currentGift = gifts[activeGiftIdx] || gifts[0];
-  const displayName = wish.nickname || wish.recipient_name;
+  const displayName = (wish.nickname || wish.recipient_name || 'Friend').trim();
+
+  // Helper to dynamically interpolate {name} and {sender} tokens in any text
+  const interpolateText = useCallback((text: string | null | undefined, fallback: string = ''): string => {
+    const content = text || fallback;
+    if (!content) return '';
+    const repName = (wish.nickname || wish.recipient_name || 'Friend').trim();
+    const senderName = (wish.sender_name || 'Someone special').trim();
+    return content
+      .replace(/\{name\}|\{recipient\}|\{recipient_name\}|\[name\]/gi, repName)
+      .replace(/\{sender\}|\{sender_name\}|\[sender\]/gi, senderName);
+  }, [wish.nickname, wish.recipient_name, wish.sender_name]);
 
   // ═══════════════════════════════════════════════
   // 1. SCREEN NAVIGATION (Reliable timing)
@@ -551,10 +562,10 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
               )}
 
               <h1 className="hand-headline">
-                {wish.theme_overrides?.cover_headline || `Special Delivery for ${displayName}! 🎁`}
+                {interpolateText(wish.theme_overrides?.cover_headline, `Special Delivery for ${displayName}! 🎁`)}
               </h1>
               <p className="doodle-subtitle">
-                {wish.theme_overrides?.cover_subtitle || "A cute little handmade scrapbook for your special day. Will you accept this gift?"}
+                {interpolateText(wish.theme_overrides?.cover_subtitle, "A cute little handmade scrapbook for your special day. Will you accept this gift?")}
               </p>
 
               <button className="btn-cute-primary" onClick={acceptGiftAndOpen}>
@@ -567,7 +578,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
 
               {showPlead && (
                 <div className="plead-box" style={{ display: 'block' }}>
-                  {wish.guilt_trip_text || "Aww please don't say no! 🥺 I made this scrapbook just for you... Tap Open!"}
+                  {interpolateText(wish.guilt_trip_text, "Aww please don't say no! 🥺 I made this scrapbook just for you... Tap Open!")}
                 </div>
               )}
             </div>
@@ -592,18 +603,18 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
                       <RealGiftBox
                         key="master-gift-box"
                         index={0}
-                        badge={gifts[0]?.badge || "Reason #1"}
-                        recipientName={wish.recipient_name}
+                        badge={interpolateText(gifts[0]?.badge, "Reason #1")}
+                        recipientName={displayName}
                         onOpen={handleUnbox}
                       />
                     ) : (
                       <div className="reason-revealed fade-in-spring">
                         <div className="scrap-tag">
-                          {currentGift.badge || `PAGE 0${activeGiftIdx + 1} / 0${gifts.length}`}
+                          {interpolateText(currentGift.badge, `PAGE 0${activeGiftIdx + 1} / 0${gifts.length}`)}
                         </div>
                         <div className="reason-big-emoji">{currentGift.emoji || '✨'}</div>
-                        <h2 className="reason-title">{currentGift.title}</h2>
-                        <p className="reason-text">{currentGift.body_text || ''}</p>
+                        <h2 className="reason-title">{interpolateText(currentGift.title)}</h2>
+                        <p className="reason-text">{interpolateText(currentGift.body_text || '')}</p>
                         {currentGift.image_url && (
                           <div
                             className="reason-photo-frame"
@@ -650,18 +661,18 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
 
               <div className="lined-notebook-page">
                 <div className={`letter-greeting-text ${letterRevealedItems.has('greeting') ? 'ink-reveal' : ''}`}>
-                  {wish.letter?.greeting || `Dear ${wish.recipient_name},`}
+                  {interpolateText(wish.letter?.greeting, `Dear ${displayName},`)}
                 </div>
 
                 {(wish.letter?.paragraphs || []).map((p, i) => (
                   <p key={i} className={`letter-paragraph-text ${letterRevealedItems.has(`para-${i}`) ? 'ink-reveal' : ''}`}>
-                    {p}
+                    {interpolateText(p)}
                   </p>
                 ))}
 
                 <div className={`letter-signature-block ${letterRevealedItems.has('signoff') ? 'ink-reveal' : ''}`}>
-                  {wish.letter?.signoff || 'Happy Birthday!'}<br />
-                  <span style={{ fontSize: '1.4rem' }}>{wish.letter?.signature || wish.sender_name}</span>
+                  {interpolateText(wish.letter?.signoff, 'Happy Birthday!')}<br />
+                  <span style={{ fontSize: '1.4rem' }}>{interpolateText(wish.letter?.signature, wish.sender_name || 'With lots of love')}</span>
                 </div>
               </div>
 
@@ -689,15 +700,15 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
           {photos.length > 0 && (
             <div className={`screen ${currentScreen === 'screen-photos' ? 'active' : ''} ${visibleScreen === 'screen-photos' ? 'visible' : ''}`}>
               <h2 className="hand-headline" style={{ textAlign: 'center', marginBottom: '2px' }}>
-                {wish.theme_overrides?.photos_headline || 'Our Golden Memories 📸'}
+                {interpolateText(wish.theme_overrides?.photos_headline, 'Our Golden Memories 📸')}
               </h2>
               <p className="doodle-subtitle" style={{ textAlign: 'center', marginBottom: '16px' }}>
-                {wish.theme_overrides?.photos_subtitle || 'Taped memories from our favorite adventures'}
+                {interpolateText(wish.theme_overrides?.photos_subtitle, 'Taped memories from our favorite adventures')}
               </p>
 
               <div className="polaroid-scroll-track">
                 {photos.map((photo, i) => {
-                  const fallbackCaption = photo.caption || "A special memory ✨";
+                  const fallbackCaption = interpolateText(photo.caption, "A special memory ✨");
                   return (
                     <div
                       key={photo.id}
@@ -716,7 +727,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
               </div>
 
               <button className="btn-cute-primary" style={{ marginTop: '14px' }} onClick={() => navigateToScreen('screen-finale')}>
-                <span>{wish.theme_overrides?.photos_button_text || 'Make a Birthday Wish 🎂'}</span>
+                <span>{interpolateText(wish.theme_overrides?.photos_button_text, 'Make a Birthday Wish 🎂')}</span>
               </button>
             </div>
           )}
@@ -774,10 +785,10 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
                 )}
 
                 <h1 className="hand-headline" style={{ color: 'var(--accent-coral)', marginBottom: '4px' }}>
-                  {wish.theme_overrides?.finale_headline || `Happy Birthday ${wish.recipient_name}! 🎉`}
+                  {interpolateText(wish.theme_overrides?.finale_headline, `Happy Birthday ${displayName}! 🎉`)}
                 </h1>
                 <p className="doodle-subtitle" style={{ marginBottom: '0', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                  {wish.theme_overrides?.finale_subtitle || "May this year be filled with endless joy, laughter, and magical adventures!"}
+                  {interpolateText(wish.theme_overrides?.finale_subtitle, "May this year be filled with endless joy, laughter, and magical adventures!")}
                 </p>
               </div>
 

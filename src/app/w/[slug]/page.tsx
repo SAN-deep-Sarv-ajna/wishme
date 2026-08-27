@@ -52,13 +52,25 @@ export async function generateMetadata(
     ? wish.photos[0].image_url 
     : undefined;
 
-  const title = wish.theme_overrides?.cover_headline 
+  const repName = (wish.nickname || wish.recipient_name || "You").trim();
+  const senderName = (wish.sender_name || "Someone special").trim();
+  
+  const rawTitle = wish.theme_overrides?.cover_headline 
     ? `${wish.theme_overrides.cover_headline}` 
-    : `Special Wish for ${wish.recipient_name}! 🎁`;
+    : `Special Wish for ${repName}! 🎁`;
+
+  const cleanTitle = rawTitle
+    .replace(/\{name\}|\{recipient\}|\{recipient_name\}|\[name\]/gi, repName)
+    .replace(/\{sender\}|\{sender_name\}|\[sender\]/gi, senderName);
+
+  const rawDesc = wish.theme_overrides?.cover_subtitle || `A special scrapbook wish from ${senderName}`;
+  const cleanDesc = rawDesc
+    .replace(/\{name\}|\{recipient\}|\{recipient_name\}|\[name\]/gi, repName)
+    .replace(/\{sender\}|\{sender_name\}|\[sender\]/gi, senderName);
 
   return {
-    title: title,
-    description: wish.theme_overrides?.cover_subtitle || `A special scrapbook wish from ${wish.sender_name}`,
+    title: cleanTitle,
+    description: cleanDesc,
     openGraph: {
       images: ogImage ? [ogImage] : [],
     },
