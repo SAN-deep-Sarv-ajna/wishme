@@ -95,23 +95,16 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FAFAF9] font-[family-name:var(--font-inter)] selection:bg-rose-200 selection:text-rose-900 overflow-x-hidden">
       
       {/* ── STICKY TOP NAVBAR ── */}
-      <nav className="fixed w-full z-50 top-0 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b-2 border-slate-200/80">
+      <nav className="fixed w-full z-50 top-0 transition-all duration-300 bg-white/85 backdrop-blur-xl border-b-2 border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <BrandLogo size="md" href="/" badge="STUDIO" />
           
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center">
             <Link 
               href="/login" 
-              className="text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-950 px-3 py-2 transition-colors"
+              className="bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black px-5 sm:px-6 py-2.5 rounded-full transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-1.5 border border-slate-800"
             >
-              Sign In
-            </Link>
-            
-            <Link 
-              href="/login" 
-              className="bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white text-xs sm:text-sm font-black px-4 sm:px-5 py-2.5 rounded-2xl transition-all shadow-md shadow-pink-500/20 active:scale-95 flex items-center gap-1.5 border border-pink-400/40"
-            >
-              <span>Create Celebration</span>
+              <span>Sign In</span>
               <ArrowRight size={14} className="shrink-0" />
             </Link>
           </div>
