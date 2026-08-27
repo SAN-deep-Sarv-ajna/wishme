@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { 
   Loader2, Plus, Gift, Eye, AlertCircle, RefreshCw, Copy, Check, 
   Trash2, QrCode, Download, Heart, Sparkles, ExternalLink, Search, 
-  TrendingUp, Users, Inbox
+  TrendingUp, Users, Inbox, Lock
 } from "lucide-react";
 
 export default function DashboardPage() {
