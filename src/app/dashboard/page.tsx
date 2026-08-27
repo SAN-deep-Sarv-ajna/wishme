@@ -7,7 +7,7 @@ import {
   Loader2, Plus, Gift, Eye, AlertCircle, RefreshCw, Copy, Check, 
   Trash2, QrCode, Download, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
-  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen
+  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,7 +32,7 @@ export default function DashboardPage() {
   useEffect(() => {
     loadWishes();
     
-    // Poll analytics every 6 seconds for real-time engagement updates
+    // Poll analytics every 6 seconds for live engagement updates
     const interval = setInterval(fetchAnalyticsSilent, 6000);
     return () => clearInterval(interval);
   }, []);
@@ -45,7 +45,7 @@ export default function DashboardPage() {
         analytics: analyticsData[w.id] || w.analytics
       })));
     } catch {
-      // Silently fail to avoid interrupting user experience
+      // Silently fail to avoid disrupting user experience
     }
   };
 
@@ -105,15 +105,16 @@ export default function DashboardPage() {
     }
   };
 
-  // Helper for computing individual wish status & state
+  // Helper for computing individual wish status & high-contrast boundaries
   const getWishStatus = (wish: any) => {
     if (wish.is_scrubbed || wish.recipient_name === "[SCRUBBED]") {
       return {
         key: "scrubbed",
         label: "Privacy Scrubbed",
-        badgeBg: "bg-slate-800 text-slate-200 border-slate-700",
-        pillBg: "bg-slate-100 text-slate-700 border-slate-300",
-        accent: "slate",
+        badgeBg: "bg-slate-900 text-slate-100 border-2 border-slate-700",
+        pillBg: "bg-slate-100 text-slate-800 border-2 border-slate-400",
+        accentColor: "text-slate-600",
+        progressColor: "bg-slate-400",
         icon: Lock,
         progress: 100,
         stageText: "Data destroyed"
@@ -128,9 +129,10 @@ export default function DashboardPage() {
       return {
         key: "hugged",
         label: "Loved & Hugged",
-        badgeBg: "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-rose-500/20",
-        pillBg: "bg-rose-50 text-rose-700 border-rose-200/80",
-        accent: "rose",
+        badgeBg: "bg-rose-600 text-white border-2 border-rose-400 shadow-md shadow-rose-600/30",
+        pillBg: "bg-rose-50 text-rose-800 border-2 border-rose-300",
+        accentColor: "text-rose-600",
+        progressColor: "bg-rose-500",
         icon: Heart,
         progress: 100,
         stageText: `${hugs} warm hug${hugs === 1 ? '' : 's'} received!`
@@ -140,9 +142,10 @@ export default function DashboardPage() {
       return {
         key: "unwrapped",
         label: "Gifts Unwrapping",
-        badgeBg: "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/20",
-        pillBg: "bg-amber-50 text-amber-800 border-amber-200/80",
-        accent: "amber",
+        badgeBg: "bg-amber-600 text-white border-2 border-amber-400 shadow-md shadow-amber-600/30",
+        pillBg: "bg-amber-50 text-amber-900 border-2 border-amber-300",
+        accentColor: "text-amber-700",
+        progressColor: "bg-amber-500",
         icon: Sparkles,
         progress: 66,
         stageText: `${gifts} reason${gifts === 1 ? '' : 's'} opened`
@@ -152,9 +155,10 @@ export default function DashboardPage() {
       return {
         key: "opened",
         label: "Link Opened",
-        badgeBg: "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sky-500/20",
-        pillBg: "bg-sky-50 text-sky-700 border-sky-200/80",
-        accent: "sky",
+        badgeBg: "bg-sky-600 text-white border-2 border-sky-400 shadow-md shadow-sky-600/30",
+        pillBg: "bg-sky-50 text-sky-800 border-2 border-sky-300",
+        accentColor: "text-sky-600",
+        progressColor: "bg-sky-500",
         icon: Eye,
         progress: 33,
         stageText: "Viewer is reading"
@@ -163,16 +167,17 @@ export default function DashboardPage() {
     return {
       key: "pending",
       label: "Awaiting Open",
-      badgeBg: "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-indigo-500/20",
-      pillBg: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
-      accent: "indigo",
+      badgeBg: "bg-indigo-700 text-white border-2 border-indigo-400 shadow-md shadow-indigo-700/30",
+      pillBg: "bg-indigo-50 text-indigo-900 border-2 border-indigo-300",
+      accentColor: "text-indigo-700",
+      progressColor: "bg-indigo-600",
       icon: Clock,
       progress: 10,
       stageText: "Ready to share"
     };
   };
 
-  // Aggregated analytics metrics for the overview cards
+  // Aggregated analytics metrics
   const metrics = useMemo(() => {
     const totalWishes = wishes.length;
     let totalViews = 0;
@@ -222,7 +227,7 @@ export default function DashboardPage() {
   const processedWishes = useMemo(() => {
     let result = [...wishes];
 
-    // Filter by Search Query
+    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(w => 
@@ -232,7 +237,7 @@ export default function DashboardPage() {
       );
     }
 
-    // Filter by Tab
+    // Filter chip selection
     if (activeFilter !== "all") {
       result = result.filter(w => {
         const st = getWishStatus(w);
@@ -261,49 +266,49 @@ export default function DashboardPage() {
   }, [wishes, searchQuery, activeFilter, sortBy]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-10">
+      
       {/* ── ERROR ALERT ── */}
       {error && (
-        <div className="p-4 bg-rose-50/90 backdrop-blur-md text-rose-800 rounded-2xl text-sm font-semibold border border-rose-200 flex items-center justify-between gap-3 shadow-sm">
+        <div className="p-4 bg-rose-50 text-rose-900 rounded-2xl text-sm font-bold border-2 border-rose-300 flex items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
             <span>{error}</span>
           </div>
           <button 
             onClick={loadWishes}
-            className="px-3.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-1.5 bg-rose-200 hover:bg-rose-300 text-rose-900 rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors border border-rose-400"
           >
-            <RefreshCw size={13} /> Retry
+            <RefreshCw size={14} /> Retry
           </button>
         </div>
       )}
 
-      {/* ── 1. CHROMATIC VALUE-BASED KPI ANALYTICS GRID ── */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      {/* ── 1. CHROMATIC VALUE-BASED KPI CARDS (HIGH-CONTRAST 2PX BORDERS) ── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         
-        {/* Metric 1: Total Scrapbooks (Royal Violet/Indigo) */}
+        {/* Metric 1: Total Scrapbooks (Royal Violet / Indigo) */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.05 }}
-          className="bg-white/90 backdrop-blur-xl border border-violet-100/90 rounded-3xl p-5 shadow-[0_4px_20px_rgba(124,58,237,0.05)] hover:shadow-[0_8px_30px_rgba(124,58,237,0.12)] transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-violet-300 hover:border-violet-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-violet-200/40 to-indigo-200/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-extrabold text-violet-700 tracking-wider uppercase bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-100">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-[10px] sm:text-[11px] font-black text-violet-800 tracking-wider uppercase bg-violet-100 px-2 sm:px-2.5 py-1 rounded-lg border border-violet-300">
               Celebrations
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-violet-500/20">
-              <Gift size={19} />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-violet-400">
+              <Gift size={16} className="sm:size-5" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalWishes}</h3>
-            <span className="text-xs text-violet-600 font-bold">created</span>
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalWishes}</h3>
+            <span className="text-[11px] sm:text-xs text-violet-700 font-extrabold">created</span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-violet-500" />
-            <span>Interactive memory scrapbooks</span>
+          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+            <span className="w-2 h-2 rounded-full bg-violet-600 shrink-0" />
+            <span>Interactive scrapbooks</span>
           </div>
         </motion.div>
 
@@ -312,26 +317,25 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.1 }}
-          className="bg-white/90 backdrop-blur-xl border border-emerald-100/90 rounded-3xl p-5 shadow-[0_4px_20px_rgba(16,185,129,0.05)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.12)] transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-emerald-300 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-emerald-200/40 to-teal-200/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-extrabold text-emerald-700 tracking-wider uppercase bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-[10px] sm:text-[11px] font-black text-emerald-800 tracking-wider uppercase bg-emerald-100 px-2 sm:px-2.5 py-1 rounded-lg border border-emerald-300">
               Total Views
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <Eye size={19} />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-sm border border-emerald-400">
+              <Eye size={16} className="sm:size-5" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalViews}</h3>
-            <span className="text-xs text-emerald-600 font-extrabold flex items-center gap-0.5">
-              <TrendingUp size={13} /> Active
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalViews}</h3>
+            <span className="text-[11px] sm:text-xs text-emerald-700 font-black flex items-center gap-0.5">
+              <TrendingUp size={12} /> Active
             </span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Real-time link impressions</span>
+          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>Live recipient views</span>
           </div>
         </motion.div>
 
@@ -340,26 +344,25 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.15 }}
-          className="bg-white/90 backdrop-blur-xl border border-rose-100/90 rounded-3xl p-5 shadow-[0_4px_20px_rgba(244,63,94,0.05)] hover:shadow-[0_8px_30px_rgba(244,63,94,0.12)] transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-rose-300 hover:border-rose-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-rose-200/40 to-pink-200/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-extrabold text-rose-700 tracking-wider uppercase bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
-              Hugs Received
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-[10px] sm:text-[11px] font-black text-rose-800 tracking-wider uppercase bg-rose-100 px-2 sm:px-2.5 py-1 rounded-lg border border-rose-300">
+              Hugs Sent
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20">
-              <Heart size={19} className="fill-white" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-600 text-white flex items-center justify-center shadow-sm border border-rose-400">
+              <Heart size={16} className="fill-white sm:size-5" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">{metrics.totalHugs}</h3>
-            <span className="text-xs text-rose-600 font-extrabold flex items-center gap-1">
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <h3 className="text-2xl sm:text-4xl font-black text-rose-600 tracking-tight">{metrics.totalHugs}</h3>
+            <span className="text-[11px] sm:text-xs text-rose-700 font-black flex items-center gap-0.5">
               💖 Live
             </span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-            <span>Emotional responses collected</span>
+          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+            <span>Heartfelt returns</span>
           </div>
         </motion.div>
 
@@ -368,194 +371,189 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.2 }}
-          className="bg-white/90 backdrop-blur-xl border border-amber-100/90 rounded-3xl p-5 shadow-[0_4px_20px_rgba(245,158,11,0.05)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-amber-300 hover:border-amber-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-amber-200/40 to-orange-200/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-extrabold text-amber-800 tracking-wider uppercase bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/80">
-              Gifts Unwrapped
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-[10px] sm:text-[11px] font-black text-amber-900 tracking-wider uppercase bg-amber-100 px-2 sm:px-2.5 py-1 rounded-lg border border-amber-300">
+              Unwrapped
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
-              <Sparkles size={19} />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm border border-amber-400">
+              <Sparkles size={16} className="sm:size-5" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalGiftsOpened}</h3>
-            <span className="text-xs text-amber-700 font-extrabold">revealed</span>
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalGiftsOpened}</h3>
+            <span className="text-[11px] sm:text-xs text-amber-800 font-black">revealed</span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-            <span>Gift cards & letters opened</span>
+          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+            <span>Gifts & letters opened</span>
           </div>
         </motion.div>
       </section>
 
-      {/* ── 2. FILTER TABS, CONTROLS, SEARCH & VIEW TOGGLE ── */}
-      <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-4 sm:p-5 shadow-xs space-y-4">
+      {/* ── 2. FILTER TABS, SEARCH, AND VIEW CONTROLS (CRISP HIGH-CONTRAST BORDERS) ── */}
+      <div className="bg-white border-2 border-slate-300 rounded-3xl p-3.5 sm:p-5 shadow-xs space-y-3.5">
         
-        {/* Top Row: Search & Action Buttons */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-          {/* Search Input */}
+        {/* Top Control Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          
+          {/* Mobile-Optimized Search Input */}
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
             <input
+              id="dashboard-search-input"
               type="text"
-              placeholder="Search by recipient name, sender, or link..."
+              placeholder="Search recipient, sender, or link..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all shadow-inner"
+              className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-slate-50 border-2 border-slate-300 focus:border-violet-600 rounded-2xl text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-500 focus:outline-none transition-colors shadow-inner"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600 px-1.5 py-0.5 rounded-md hover:bg-slate-200 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                aria-label="Clear search"
               >
-                Clear
+                <X size={15} />
               </button>
             )}
           </div>
 
-          {/* Controls: Sort, View Toggle, New Wish */}
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          {/* Controls Bar: Sort, View Switcher */}
+          <div className="flex items-center gap-2 justify-between sm:justify-end">
+            
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 text-xs font-bold text-slate-700">
-              <Filter size={13} className="text-slate-400" />
+            <div className="flex items-center gap-1.5 bg-slate-50 border-2 border-slate-300 rounded-2xl px-3 py-2 text-xs font-bold text-slate-800 flex-1 sm:flex-none">
+              <Filter size={14} className="text-slate-500 shrink-0" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortType)}
-                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-black text-slate-900 focus:outline-none cursor-pointer w-full"
               >
                 <option value="latest">Latest First</option>
                 <option value="most_hugs">Most Hugs 💖</option>
                 <option value="most_views">Most Views 👀</option>
-                <option value="name">Recipient Name (A-Z)</option>
+                <option value="name">Name (A–Z)</option>
               </select>
             </div>
 
             {/* View Switcher (Grid / List) */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
+            <div className="flex items-center bg-slate-100 p-1 rounded-2xl border-2 border-slate-300 shrink-0">
               <button
                 onClick={() => setViewMode("grid")}
                 title="Grid Cards"
-                className={`p-1.5 rounded-xl transition-all ${
+                className={`p-2 rounded-xl transition-all ${
                   viewMode === "grid" 
-                    ? "bg-white text-violet-700 shadow-xs font-bold" 
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white text-violet-700 shadow-xs font-black border border-slate-300" 
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <LayoutGrid size={15} />
+                <LayoutGrid size={16} />
               </button>
               <button
                 onClick={() => setViewMode("list")}
                 title="List View"
-                className={`p-1.5 rounded-xl transition-all ${
+                className={`p-2 rounded-xl transition-all ${
                   viewMode === "list" 
-                    ? "bg-white text-violet-700 shadow-xs font-bold" 
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white text-violet-700 shadow-xs font-black border border-slate-300" 
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <List size={15} />
+                <List size={16} />
               </button>
             </div>
-
-            {/* Create Button (Mobile/Tablet quick trigger) */}
-            <Link 
-              href="/dashboard/create"
-              className="bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 text-white text-xs font-extrabold px-4 py-2.5 rounded-2xl shadow-sm shadow-pink-200 flex items-center gap-1.5 shrink-0 hover:opacity-95 transition-opacity"
-            >
-              <Plus size={15} />
-              <span>Create</span>
-            </Link>
           </div>
         </div>
 
-        {/* Bottom Row: Value-Coded Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-bold">
-          {/* All */}
+        {/* Horizontal Scrollable Filter Chips */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs font-extrabold scroll-smooth">
+          
+          {/* Chip 1: All */}
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-3.5 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
               activeFilter === "all"
-                ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                : "bg-white text-slate-700 border-slate-300 hover:border-slate-400 hover:bg-slate-50"
             }`}
           >
             <span>All Celebrations</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeFilter === "all" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeFilter === "all" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-800"
             }`}>
               {wishes.length}
             </span>
           </button>
 
-          {/* Hugged (Rose) */}
+          {/* Chip 2: Loved & Hugged (Rose) */}
           <button
             onClick={() => setActiveFilter("hugged")}
-            className={`px-3.5 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
               activeFilter === "hugged"
-                ? "bg-rose-500 text-white border-rose-500 shadow-xs shadow-rose-200"
-                : "bg-rose-50/70 text-rose-700 border-rose-200 hover:bg-rose-100"
+                ? "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-500/20"
+                : "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
             }`}
           >
-            <Heart size={12} className={activeFilter === "hugged" ? "fill-white" : "fill-rose-500"} />
+            <Heart size={13} className={activeFilter === "hugged" ? "fill-white" : "fill-rose-600"} />
             <span>Loved & Hugged</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeFilter === "hugged" ? "bg-white/20 text-white" : "bg-rose-200 text-rose-800"
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeFilter === "hugged" ? "bg-white/20 text-white" : "bg-rose-200 text-rose-900"
             }`}>
               {metrics.huggedCount}
             </span>
           </button>
 
-          {/* Unwrapping Gifts (Amber) */}
+          {/* Chip 3: In Progress / Unwrapped (Amber) */}
           <button
             onClick={() => setActiveFilter("unwrapped")}
-            className={`px-3.5 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
               activeFilter === "unwrapped"
-                ? "bg-amber-500 text-white border-amber-500 shadow-xs shadow-amber-200"
-                : "bg-amber-50/70 text-amber-800 border-amber-200 hover:bg-amber-100"
+                ? "bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-500/20"
+                : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
             }`}
           >
-            <Sparkles size={12} />
+            <Sparkles size={13} />
             <span>In Progress</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeFilter === "unwrapped" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeFilter === "unwrapped" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-950"
             }`}>
               {metrics.inProgressCount}
             </span>
           </button>
 
-          {/* Pending (Indigo) */}
+          {/* Chip 4: Awaiting View (Indigo) */}
           <button
             onClick={() => setActiveFilter("pending")}
-            className={`px-3.5 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
               activeFilter === "pending"
-                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs shadow-indigo-200"
-                : "bg-indigo-50/70 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                ? "bg-indigo-700 text-white border-indigo-700 shadow-sm shadow-indigo-500/20"
+                : "bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100"
             }`}
           >
-            <Clock size={12} />
+            <Clock size={13} />
             <span>Awaiting View</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              activeFilter === "pending" ? "bg-white/20 text-white" : "bg-indigo-200 text-indigo-800"
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              activeFilter === "pending" ? "bg-white/20 text-white" : "bg-indigo-200 text-indigo-950"
             }`}>
               {metrics.pendingCount}
             </span>
           </button>
 
-          {/* Privacy Scrubbed (Slate) */}
+          {/* Chip 5: Privacy Scrubbed (Slate) */}
           {metrics.scrubbedCount > 0 && (
             <button
               onClick={() => setActiveFilter("scrubbed")}
-              className={`px-3.5 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
                 activeFilter === "scrubbed"
-                  ? "bg-slate-700 text-white border-slate-700 shadow-xs"
-                  : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                  ? "bg-slate-800 text-white border-slate-800 shadow-sm"
+                  : "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
               }`}
             >
-              <Lock size={12} />
+              <Lock size={13} />
               <span>Scrubbed</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                activeFilter === "scrubbed" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                activeFilter === "scrubbed" ? "bg-white/20 text-white" : "bg-slate-300 text-slate-900"
               }`}>
                 {metrics.scrubbedCount}
               </span>
@@ -566,51 +564,51 @@ export default function DashboardPage() {
 
       {/* ── 3. MAIN CARDS VIEW OR LIST VIEW ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-28 gap-4">
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 animate-spin flex items-center justify-center p-[2px]">
             <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
               <Loader2 className="animate-spin text-violet-600" size={24} />
             </div>
           </div>
-          <p className="text-slate-500 text-sm font-bold tracking-wide">Syncing celebration feeds & analytics...</p>
+          <p className="text-slate-600 text-sm font-bold tracking-wide">Syncing celebrations & engagement...</p>
         </div>
       ) : wishes.length === 0 ? (
         /* Empty State */
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/90 backdrop-blur-2xl rounded-3xl border border-slate-200/80 p-10 sm:p-16 text-center shadow-md max-w-xl mx-auto"
+          className="bg-white rounded-3xl border-2 border-slate-300 p-8 sm:p-14 text-center shadow-sm max-w-xl mx-auto"
         >
-          <div className="w-24 h-24 bg-gradient-to-br from-violet-100 via-pink-100 to-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-white">
-            <Gift className="text-violet-600" size={42} />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-violet-100 via-pink-100 to-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-5 border-2 border-slate-200">
+            <Gift className="text-violet-600" size={40} />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 mb-2.5">No Celebrations Created Yet</h3>
-          <p className="text-slate-600 text-sm mb-8 leading-relaxed max-w-md mx-auto">
-            Design a magical, personalized interactive scrapbook with living auroras, 3D gift unboxing, music, and love notes.
+          <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">No Celebrations Created Yet</h3>
+          <p className="text-slate-600 text-xs sm:text-sm mb-7 leading-relaxed max-w-md mx-auto">
+            Design a magical, personalized interactive scrapbook with living auroras, 3D gift unboxing, music, and memories.
           </p>
           <Link 
             href="/dashboard/create"
-            className="bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-pink-500/20 hover:-translate-y-1 transition-all inline-flex items-center gap-2.5"
+            className="bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white px-7 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-md shadow-pink-500/20 active:scale-95 transition-all inline-flex items-center gap-2 border border-pink-400/40"
           >
-            <Plus size={20} /> Create Your First Scrapbook
+            <Plus size={18} /> Create Your First Scrapbook
           </Link>
         </motion.div>
       ) : processedWishes.length === 0 ? (
         /* Filter Empty State */
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/80 p-10 text-center max-w-md mx-auto shadow-xs">
-          <Inbox className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h4 className="text-base font-extrabold text-slate-800">No celebrations found</h4>
-          <p className="text-xs text-slate-500 mt-1">Try tweaking your search term or selecting a different filter chip.</p>
+        <div className="bg-white rounded-3xl border-2 border-slate-300 p-8 text-center max-w-md mx-auto shadow-xs">
+          <Inbox className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <h4 className="text-base font-black text-slate-900">No celebrations found</h4>
+          <p className="text-xs text-slate-500 mt-1">Try tweaking your search term or selecting a different filter.</p>
           <button
             onClick={() => { setSearchQuery(""); setActiveFilter("all"); }}
-            className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+            className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-xl border border-slate-300 transition-colors"
           >
             Reset Filters
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* ── GRID VIEW (RICH VALUE-CODED CARDS) ── */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        /* ── GRID VIEW (MOBILE-FIRST CARDS WITH 2PX BORDERS & VALUE COLORS) ── */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
             const StatusIcon = status.icon;
@@ -629,40 +627,40 @@ export default function DashboardPage() {
               return (
                 <div 
                   key={wish.id} 
-                  className="bg-slate-50/90 backdrop-blur-xl rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs flex flex-col justify-between opacity-80"
+                  className="bg-slate-50 rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs flex flex-col justify-between opacity-80"
                 >
-                  <div className="p-6">
+                  <div className="p-5 sm:p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-slate-200 rounded-2xl flex items-center justify-center">
-                        <Lock className="w-5 h-5 text-slate-400" />
+                      <div className="w-11 h-11 bg-slate-200 rounded-2xl flex items-center justify-center border border-slate-300">
+                        <Lock className="w-5 h-5 text-slate-500" />
                       </div>
-                      <span className="text-[10px] font-extrabold tracking-wider uppercase text-slate-500 bg-slate-200 px-3 py-1 rounded-full border border-slate-300">
+                      <span className="text-[10px] font-black tracking-wider uppercase text-slate-600 bg-slate-200 px-3 py-1 rounded-full border border-slate-400">
                         Destroyed / Scrubbed
                       </span>
                     </div>
                     
-                    <h3 className="text-xl font-bold text-slate-500 line-through decoration-slate-300">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-500 line-through decoration-slate-400">
                       Private Memory
                     </h3>
-                    <p className="text-xs text-slate-400 font-medium mb-5">
+                    <p className="text-xs text-slate-400 font-bold mb-4">
                       Created {date}
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-                        <span className="text-lg font-black text-slate-700 block">{views}</span>
-                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Views</span>
+                      <div className="bg-white border-2 border-slate-200 rounded-2xl p-2.5 text-center">
+                        <span className="text-base sm:text-lg font-black text-slate-700 block">{views}</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Views</span>
                       </div>
-                      <div className="bg-white border border-slate-200 rounded-2xl p-3 text-center">
-                        <span className="text-lg font-black text-slate-700 block">{hugs}</span>
-                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide">Hugs</span>
+                      <div className="bg-white border-2 border-slate-200 rounded-2xl p-2.5 text-center">
+                        <span className="text-base sm:text-lg font-black text-slate-700 block">{hugs}</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Hugs</span>
                       </div>
                     </div>
                     
-                    <div className="bg-slate-200/60 rounded-2xl p-3 flex gap-2.5">
-                      <Lock size={14} className="text-slate-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                        Photos and sensitive letters were destroyed upon user request.
+                    <div className="bg-slate-200/70 rounded-2xl p-3 flex gap-2.5 border border-slate-300">
+                      <Lock size={14} className="text-slate-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-slate-700 font-semibold leading-relaxed">
+                        Photos and personal letter destroyed permanently upon user request.
                       </p>
                     </div>
                   </div>
@@ -676,11 +674,11 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/80 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                className="bg-white rounded-3xl border-2 border-slate-300 hover:border-slate-400 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 group flex flex-col justify-between"
               >
                 <div>
                   {/* Card Cover Banner */}
-                  <div className="h-44 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden">
+                  <div className="h-44 sm:h-48 bg-slate-900 relative overflow-hidden">
                     {wish.photos && wish.photos.length > 0 ? (
                       <img 
                         src={wish.photos[0].image_url} 
@@ -698,14 +696,14 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    {/* Gradient Overlay for Text Legibility */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+                    {/* Gradient Overlay for Text Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
 
                     {/* Top Status & Delete Badges */}
-                    <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10">
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
                       {/* State Badge */}
-                      <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md backdrop-blur-md flex items-center gap-1.5 ${status.badgeBg}`}>
-                        <StatusIcon size={11} className={status.key === 'hugged' ? 'fill-white animate-pulse' : ''} />
+                      <span className={`text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 ${status.badgeBg}`}>
+                        <StatusIcon size={12} className={status.key === 'hugged' ? 'fill-white animate-pulse' : ''} />
                         <span>{status.label}</span>
                       </span>
 
@@ -713,7 +711,7 @@ export default function DashboardPage() {
                       <button
                         onClick={() => setWishToDelete(wish)}
                         title="Delete Celebration"
-                        className="w-8 h-8 rounded-full bg-black/50 hover:bg-rose-600 text-white flex items-center justify-center shadow-md transition-colors backdrop-blur-md"
+                        className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center border border-white/20 transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -721,40 +719,36 @@ export default function DashboardPage() {
 
                     {/* Recipient & Sender Overlays */}
                     <div className="absolute bottom-3 left-4 right-4 z-10">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-extrabold text-lg text-white drop-shadow-sm truncate">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-black text-lg text-white drop-shadow-sm truncate">
                           {wish.recipient_name}&apos;s Scrapbook
                         </h3>
-                        <span className="text-[10px] text-white/80 font-bold bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/20">
+                        <span className="text-[10px] text-white font-bold bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/30 shrink-0">
                           {wish.theme_overrides?.theme_name || "Scrapbook"}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 font-medium truncate mt-0.5">
-                        Gifted with love by <span className="text-white font-bold">{wish.sender_name}</span>
+                      <p className="text-xs text-slate-300 font-semibold truncate mt-0.5">
+                        Created by <span className="text-white font-black">{wish.sender_name}</span>
                       </p>
                     </div>
                   </div>
 
-                  {/* Card Body with Value-Coded Metrics */}
-                  <div className="p-5 space-y-4">
+                  {/* Card Body with Value-Coded Metrics & 2px Borders */}
+                  <div className="p-4 sm:p-5 space-y-3.5">
                     
                     {/* Recipient Emotional Journey Stepper Bar */}
-                    <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-bold">
-                        <span className="text-slate-500 uppercase tracking-wider">Recipient Journey</span>
-                        <span className={`font-extrabold ${
-                          status.key === 'hugged' ? 'text-rose-600' :
-                          status.key === 'unwrapped' ? 'text-amber-700' :
-                          status.key === 'opened' ? 'text-sky-600' : 'text-indigo-600'
-                        }`}>
+                    <div className="p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-black">
+                        <span className="text-slate-600 uppercase tracking-wider">Journey Stage</span>
+                        <span className={`font-black ${status.accentColor}`}>
                           {status.stageText}
                         </span>
                       </div>
 
                       {/* 4-Step Color Progression Track */}
-                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                      <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex gap-1 p-0.5 border border-slate-300">
                         {/* Step 1: Created (Indigo) */}
-                        <div className="h-full flex-1 rounded-l-full bg-indigo-500" />
+                        <div className="h-full flex-1 rounded-l-full bg-indigo-600" />
                         {/* Step 2: Opened (Sky Blue) */}
                         <div className={`h-full flex-1 transition-colors ${views > 0 ? 'bg-sky-500' : 'bg-slate-200'}`} />
                         {/* Step 3: Unwrapped (Amber) */}
@@ -764,59 +758,59 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Detailed Metric Pills (Values Distinct by Color) */}
-                    <div className="grid grid-cols-4 gap-2">
+                    {/* Detailed Metric Pills (High-Contrast 2px Borders) */}
+                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                       {/* Views (Sky) */}
-                      <div className="bg-sky-50/80 border border-sky-100 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-sky-600 mb-0.5">
+                      <div className="bg-sky-50 border-2 border-sky-300 rounded-2xl p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-sky-700 mb-0.5">
                           <Eye size={12} />
-                          <span className="text-[10px] font-extrabold uppercase">Views</span>
+                          <span className="text-[10px] font-black uppercase">Views</span>
                         </div>
-                        <span className="text-sm font-black text-sky-900">{views}</span>
+                        <span className="text-sm font-black text-sky-950">{views}</span>
                       </div>
 
                       {/* Gifts (Amber) */}
-                      <div className="bg-amber-50/80 border border-amber-100 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-amber-700 mb-0.5">
+                      <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-amber-800 mb-0.5">
                           <Sparkles size={12} />
-                          <span className="text-[10px] font-extrabold uppercase">Gifts</span>
+                          <span className="text-[10px] font-black uppercase">Gifts</span>
                         </div>
-                        <span className="text-sm font-black text-amber-900">{gifts}</span>
+                        <span className="text-sm font-black text-amber-950">{gifts}</span>
                       </div>
 
                       {/* Letters (Violet) */}
-                      <div className="bg-violet-50/80 border border-violet-100 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-violet-600 mb-0.5">
+                      <div className="bg-violet-50 border-2 border-violet-300 rounded-2xl p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-violet-700 mb-0.5">
                           <MailOpen size={12} />
-                          <span className="text-[10px] font-extrabold uppercase">Letter</span>
+                          <span className="text-[10px] font-black uppercase">Letter</span>
                         </div>
-                        <span className="text-sm font-black text-violet-900">{letters > 0 ? 'Read' : '0'}</span>
+                        <span className="text-sm font-black text-violet-950">{letters > 0 ? 'Read' : '0'}</span>
                       </div>
 
                       {/* Hugs (Rose) */}
-                      <div className="bg-rose-50/80 border border-rose-100 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-rose-600 mb-0.5">
-                          <Heart size={12} className="fill-rose-500" />
-                          <span className="text-[10px] font-extrabold uppercase">Hugs</span>
+                      <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-2 text-center">
+                        <div className="flex items-center justify-center gap-1 text-rose-700 mb-0.5">
+                          <Heart size={12} className="fill-rose-600" />
+                          <span className="text-[10px] font-black uppercase">Hugs</span>
                         </div>
-                        <span className="text-sm font-black text-rose-900">{hugs}</span>
+                        <span className="text-sm font-black text-rose-950">{hugs}</span>
                       </div>
                     </div>
 
-                    {/* Share Link Pill */}
-                    <div className="flex items-center justify-between bg-slate-50 border border-slate-200/90 rounded-2xl p-1.5 pl-3">
-                      <span className="text-xs font-mono font-bold text-slate-700 truncate mr-2 select-all">
+                    {/* Share Link Pill (Touch Friendly) */}
+                    <div className="flex items-center justify-between bg-slate-50 border-2 border-slate-300 rounded-2xl p-1.5 pl-3">
+                      <span className="text-xs font-mono font-bold text-slate-800 truncate mr-2 select-all">
                         {getFullShareUrl(wish.slug)}
                       </span>
                       <button
                         onClick={() => handleCopy(wish.id, wish.slug)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 shrink-0 transition-all ${
+                        className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 transition-all border ${
                           isCopied 
-                            ? 'bg-emerald-500 text-white shadow-xs' 
-                            : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-xs'
+                            ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs' 
+                            : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 shadow-xs'
                         }`}
                       >
-                        {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                        {isCopied ? <Check size={13} /> : <Copy size={13} />}
                         {isCopied ? "Copied!" : "Copy"}
                       </button>
                     </div>
@@ -824,22 +818,22 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="p-5 pt-0">
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                <div className="p-4 sm:p-5 pt-0">
+                  <div className="flex items-center gap-2 pt-3 border-t-2 border-slate-200">
                     <button
                       onClick={() => setWishForQr(wish)}
                       title="View QR Code"
-                      className="py-2.5 px-3.5 bg-slate-50 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 border border-slate-200 text-slate-700 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all shadow-xs"
+                      className="py-3 px-4 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 border-2 border-slate-300 hover:border-violet-400 text-slate-800 rounded-2xl text-xs font-black flex items-center justify-center transition-all shadow-xs"
                     >
-                      <QrCode size={16} />
+                      <QrCode size={17} />
                     </button>
                     
                     <Link 
                       href={`/w/${wish.slug}`}
                       target="_blank"
-                      className="flex-1 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-pink-500/15 hover:-translate-y-0.5"
+                      className="flex-1 bg-gradient-to-r from-violet-600 via-pink-600 to-rose-600 hover:from-violet-700 hover:via-pink-700 hover:to-rose-700 text-white py-3 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md shadow-pink-500/20 border border-pink-400/40 active:scale-98"
                     >
-                      <ExternalLink size={14} />
+                      <ExternalLink size={15} />
                       <span>Preview Live</span>
                     </Link>
                   </div>
@@ -849,22 +843,22 @@ export default function DashboardPage() {
           })}
         </div>
       ) : (
-        /* ── LIST / TABLE VIEW ── */
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs">
+        /* ── LIST / TABLE VIEW (HIGH-CONTRAST BORDERS) ── */
+        <div className="bg-white rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+              <thead className="bg-slate-100 border-b-2 border-slate-300 text-[11px] font-black text-slate-700 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-5">Recipient & Creator</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Views</th>
-                  <th className="py-3.5 px-4 text-center">Gifts</th>
-                  <th className="py-3.5 px-4 text-center">Hugs</th>
-                  <th className="py-3.5 px-4">Created Date</th>
-                  <th className="py-3.5 px-5 text-right">Actions</th>
+                  <th className="py-3.5 px-4 sm:px-5">Recipient & Creator</th>
+                  <th className="py-3.5 px-3">Status</th>
+                  <th className="py-3.5 px-3 text-center">Views</th>
+                  <th className="py-3.5 px-3 text-center">Gifts</th>
+                  <th className="py-3.5 px-3 text-center">Hugs</th>
+                  <th className="py-3.5 px-3">Created</th>
+                  <th className="py-3.5 px-4 sm:px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+              <tbody className="divide-y-2 divide-slate-200 font-bold text-slate-800">
                 {processedWishes.map((wish) => {
                   const status = getWishStatus(wish);
                   const isCopied = copiedId === wish.id;
@@ -873,84 +867,84 @@ export default function DashboardPage() {
                   });
 
                   return (
-                    <tr key={wish.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-4 px-5">
+                    <tr key={wish.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-4 px-4 sm:px-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0 border border-violet-400">
                             {wish.theme_overrides?.mascot_emoji || "🎁"}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-extrabold text-slate-900 text-sm truncate">{wish.recipient_name}</p>
-                            <p className="text-[11px] text-slate-400 truncate">From {wish.sender_name}</p>
+                            <p className="font-black text-slate-900 text-sm truncate">{wish.recipient_name}</p>
+                            <p className="text-[11px] text-slate-500 truncate">From {wish.sender_name}</p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold border inline-flex items-center gap-1 ${status.pillBg}`}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      <td className="py-4 px-3">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black inline-flex items-center gap-1 ${status.pillBg}`}>
+                          <span className="w-2 h-2 rounded-full bg-current" />
                           {status.label}
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 font-bold border border-sky-100">
+                      <td className="py-4 px-3 text-center">
+                        <span className="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 font-black border-2 border-sky-300">
                           {wish.analytics?.view || 0}
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 font-bold border border-amber-100">
+                      <td className="py-4 px-3 text-center">
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-black border-2 border-amber-300">
                           {wish.analytics?.gift_opened || 0}
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold border border-rose-100 flex items-center justify-center gap-1 mx-auto max-w-[50px]">
-                          <Heart size={11} className="fill-rose-500" />
+                      <td className="py-4 px-3 text-center">
+                        <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 font-black border-2 border-rose-300 flex items-center justify-center gap-1 mx-auto max-w-[50px]">
+                          <Heart size={11} className="fill-rose-600" />
                           {wish.analytics?.hug_sent || 0}
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-slate-500 font-medium">
+                      <td className="py-4 px-3 text-slate-600 font-semibold">
                         {date}
                       </td>
 
-                      <td className="py-4 px-5 text-right">
+                      <td className="py-4 px-4 sm:px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleCopy(wish.id, wish.slug)}
                             title="Copy Link"
-                            className={`p-2 rounded-xl text-xs font-bold transition-colors ${
-                              isCopied ? 'bg-emerald-500 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            className={`p-2.5 rounded-xl text-xs font-black transition-colors border ${
+                              isCopied ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
                             }`}
                           >
-                            {isCopied ? <Check size={14} /> : <Copy size={14} />}
+                            {isCopied ? <Check size={15} /> : <Copy size={15} />}
                           </button>
 
                           <button
                             onClick={() => setWishForQr(wish)}
                             title="View QR Code"
-                            className="p-2 bg-slate-100 hover:bg-violet-100 hover:text-violet-700 rounded-xl text-slate-700 transition-colors"
+                            className="p-2.5 bg-slate-100 hover:bg-violet-100 hover:text-violet-800 rounded-xl text-slate-800 border border-slate-300 transition-colors"
                           >
-                            <QrCode size={14} />
+                            <QrCode size={15} />
                           </button>
 
                           <Link
                             href={`/w/${wish.slug}`}
                             target="_blank"
-                            title="Preview"
-                            className="p-2 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl shadow-xs hover:opacity-90 transition-opacity"
+                            title="Preview Live"
+                            className="p-2.5 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-xl shadow-xs hover:opacity-90 border border-pink-400 transition-opacity"
                           >
-                            <ExternalLink size={14} />
+                            <ExternalLink size={15} />
                           </Link>
 
                           <button
                             onClick={() => setWishToDelete(wish)}
                             title="Delete"
-                            className="p-2 bg-slate-100 hover:bg-rose-100 hover:text-rose-600 rounded-xl text-slate-400 transition-colors"
+                            className="p-2.5 bg-slate-100 hover:bg-rose-100 hover:text-rose-700 rounded-xl text-slate-500 border border-slate-300 transition-colors"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       </td>
@@ -963,23 +957,23 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 4. QR CODE MODAL ── */}
+      {/* ── 4. QR CODE MODAL (MOBILE-FRIENDLY & HIGH-CONTRAST) ── */}
       <AnimatePresence>
         {wishForQr && (
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-100 text-center"
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border-2 border-slate-300 text-center"
             >
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-violet-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-pink-500 text-white flex items-center justify-center mx-auto mb-3 shadow-md border border-violet-400">
                 <QrCode size={24} />
               </div>
               <h3 className="text-lg font-black text-slate-900">Scan to Open Scrapbook</h3>
-              <p className="text-xs text-slate-500 mt-0.5 mb-5">Personalized for <span className="font-extrabold text-slate-800">{wishForQr.recipient_name}</span></p>
+              <p className="text-xs text-slate-600 mt-0.5 mb-5 font-semibold">Personalized for <span className="font-black text-slate-900">{wishForQr.recipient_name}</span></p>
               
-              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-200 mb-5 inline-block shadow-inner">
+              <div className="bg-slate-50 p-4 sm:p-5 rounded-3xl border-2 border-slate-300 mb-5 inline-block shadow-inner">
                 <img 
                   src={api.qr.getUrl(wishForQr.slug)} 
                   alt="Scrapbook QR Code" 
@@ -992,13 +986,13 @@ export default function DashboardPage() {
                   href={api.qr.getUrl(wishForQr.slug)}
                   download={`${wishForQr.slug}-qr.png`}
                   target="_blank"
-                  className="flex-1 py-3 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 transition-all"
+                  className="flex-1 py-3.5 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white text-xs font-black rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-pink-500/20 border border-pink-400 active:scale-95 transition-all"
                 >
-                  <Download size={15} /> Download PNG
+                  <Download size={16} /> Download PNG
                 </a>
                 <button
                   onClick={() => setWishForQr(null)}
-                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold rounded-2xl transition-colors"
+                  className="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-2xl border-2 border-slate-300 transition-colors"
                 >
                   Close
                 </button>
@@ -1011,30 +1005,30 @@ export default function DashboardPage() {
       {/* ── 5. DELETE CONFIRMATION MODAL ── */}
       <AnimatePresence>
         {wishToDelete && (
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-100 text-center"
+              className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border-2 border-rose-300 text-center"
             >
-              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 shadow-inner border border-rose-100">
-                <Trash2 size={26} />
+              <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center mx-auto mb-4 border-2 border-rose-300">
+                <Trash2 size={28} />
               </div>
               
               <h3 className="text-xl font-black text-slate-900 mb-1.5">
                 Delete Celebration?
               </h3>
               
-              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-                Are you sure you want to permanently delete the scrapbook for <span className="font-extrabold text-slate-800">{wishToDelete.recipient_name}</span>? The share link and photos will become inaccessible.
+              <p className="text-xs text-slate-600 mb-6 leading-relaxed font-semibold">
+                Are you sure you want to permanently delete the scrapbook for <span className="font-black text-slate-900">{wishToDelete.recipient_name}</span>? The share link and photos will become inaccessible.
               </p>
               
               <div className="flex items-center gap-3">
                 <button
                   disabled={deleting}
                   onClick={() => setWishToDelete(null)}
-                  className="flex-1 py-3 rounded-2xl border border-slate-200 text-slate-700 font-extrabold text-xs hover:bg-slate-50 transition-colors"
+                  className="flex-1 py-3 rounded-2xl border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-50 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1042,7 +1036,7 @@ export default function DashboardPage() {
                 <button
                   disabled={deleting}
                   onClick={handleDeleteConfirm}
-                  className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-500/20 border border-rose-500 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
                   {deleting ? <Loader2 size={16} className="animate-spin" /> : "Delete Forever"}
                 </button>
