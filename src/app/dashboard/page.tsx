@@ -7,7 +7,8 @@ import {
   Loader2, Plus, Gift, Eye, AlertCircle, RefreshCw, Copy, Check, 
   Trash2, QrCode, Download, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
-  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen, X
+  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen, X,
+  Calendar, UserCheck, Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -76,6 +77,17 @@ export default function DashboardPage() {
     return `${origin}/w/${slug}`;
   };
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return null;
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+      return url;
+    }
+    if (url.startsWith("/")) {
+      return url;
+    }
+    return `/${url}`;
+  };
+
   const handleCopy = async (id: string, slug: string) => {
     const url = getFullShareUrl(slug);
     try {
@@ -111,10 +123,10 @@ export default function DashboardPage() {
       return {
         key: "scrubbed",
         label: "Privacy Scrubbed",
-        badgeBg: "bg-slate-900 text-slate-100 border-2 border-slate-700",
-        pillBg: "bg-slate-100 text-slate-800 border-2 border-slate-400",
-        accentColor: "text-slate-600",
-        progressColor: "bg-slate-400",
+        badgeBg: "bg-slate-900 text-white border-2 border-slate-700",
+        pillBg: "bg-slate-100 text-slate-900 border-2 border-slate-400",
+        accentColor: "text-slate-700",
+        progressColor: "bg-slate-500",
         icon: Lock,
         progress: 100,
         stageText: "Data destroyed"
@@ -129,9 +141,9 @@ export default function DashboardPage() {
       return {
         key: "hugged",
         label: "Loved & Hugged",
-        badgeBg: "bg-rose-600 text-white border-2 border-rose-400 shadow-md shadow-rose-600/30",
-        pillBg: "bg-rose-50 text-rose-800 border-2 border-rose-300",
-        accentColor: "text-rose-600",
+        badgeBg: "bg-rose-600 text-white border-2 border-rose-300 shadow-md shadow-rose-600/30",
+        pillBg: "bg-rose-100 text-rose-900 border-2 border-rose-400",
+        accentColor: "text-rose-700",
         progressColor: "bg-rose-500",
         icon: Heart,
         progress: 100,
@@ -142,9 +154,9 @@ export default function DashboardPage() {
       return {
         key: "unwrapped",
         label: "Gifts Unwrapping",
-        badgeBg: "bg-amber-600 text-white border-2 border-amber-400 shadow-md shadow-amber-600/30",
-        pillBg: "bg-amber-50 text-amber-900 border-2 border-amber-300",
-        accentColor: "text-amber-700",
+        badgeBg: "bg-amber-600 text-white border-2 border-amber-300 shadow-md shadow-amber-600/30",
+        pillBg: "bg-amber-100 text-amber-950 border-2 border-amber-400",
+        accentColor: "text-amber-800",
         progressColor: "bg-amber-500",
         icon: Sparkles,
         progress: 66,
@@ -155,9 +167,9 @@ export default function DashboardPage() {
       return {
         key: "opened",
         label: "Link Opened",
-        badgeBg: "bg-sky-600 text-white border-2 border-sky-400 shadow-md shadow-sky-600/30",
-        pillBg: "bg-sky-50 text-sky-800 border-2 border-sky-300",
-        accentColor: "text-sky-600",
+        badgeBg: "bg-sky-600 text-white border-2 border-sky-300 shadow-md shadow-sky-600/30",
+        pillBg: "bg-sky-100 text-sky-950 border-2 border-sky-400",
+        accentColor: "text-sky-800",
         progressColor: "bg-sky-500",
         icon: Eye,
         progress: 33,
@@ -167,9 +179,9 @@ export default function DashboardPage() {
     return {
       key: "pending",
       label: "Awaiting Open",
-      badgeBg: "bg-indigo-700 text-white border-2 border-indigo-400 shadow-md shadow-indigo-700/30",
-      pillBg: "bg-indigo-50 text-indigo-900 border-2 border-indigo-300",
-      accentColor: "text-indigo-700",
+      badgeBg: "bg-indigo-700 text-white border-2 border-indigo-300 shadow-md shadow-indigo-700/30",
+      pillBg: "bg-indigo-100 text-indigo-950 border-2 border-indigo-400",
+      accentColor: "text-indigo-800",
       progressColor: "bg-indigo-600",
       icon: Clock,
       progress: 10,
@@ -607,7 +619,7 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* ── GRID VIEW (MOBILE-FIRST CARDS WITH 2PX BORDERS & VALUE COLORS) ── */
+        /* ── GRID VIEW (MAXIMUM VISIBILITY & CRYSTAL-CLEAR CELEBRATION CARDS) ── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
@@ -622,6 +634,10 @@ export default function DashboardPage() {
             const views = wish.analytics?.view || 0;
             const gifts = wish.analytics?.gift_opened || 0;
             const letters = wish.analytics?.letter_read || 0;
+
+            const coverImg = wish.photos && wish.photos.length > 0 
+              ? resolveImageUrl(wish.photos[0].image_url) 
+              : null;
 
             if (isScrubbed) {
               return (
@@ -674,68 +690,89 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="bg-white rounded-3xl border-2 border-slate-300 hover:border-slate-400 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 group flex flex-col justify-between"
+                className="bg-white rounded-3xl border-2 border-slate-300 hover:border-violet-400 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
-                  {/* Card Cover Banner */}
-                  <div className="h-44 sm:h-48 bg-slate-900 relative overflow-hidden">
-                    {wish.photos && wish.photos.length > 0 ? (
-                      <img 
-                        src={wish.photos[0].image_url} 
-                        alt={wish.recipient_name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90" 
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-violet-900 via-pink-900 to-slate-950">
-                        <span className="text-4xl mb-1 drop-shadow-md">
+                  
+                  {/* ── CARD TOP HEADER (RECIPIENT & OCCASION BADGE) ── */}
+                  <div className="p-4 sm:p-5 pb-3 border-b-2 border-slate-100 flex items-start justify-between gap-2.5 bg-gradient-to-r from-slate-50 via-white to-slate-50">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-violet-600 via-pink-500 to-amber-400 p-[2px] shadow-sm shrink-0">
+                        <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-white text-lg">
                           {wish.theme_overrides?.mascot_emoji || "🎁"}
-                        </span>
-                        <span className="text-2xl font-black text-white font-[family-name:var(--font-caveat)] drop-shadow-md">
-                          For {wish.recipient_name}
-                        </span>
+                        </div>
                       </div>
-                    )}
-
-                    {/* Gradient Overlay for Text Readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent" />
-
-                    {/* Top Status & Delete Badges */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                      {/* State Badge */}
-                      <span className={`text-[10px] font-black px-3 py-1.5 rounded-full flex items-center gap-1.5 ${status.badgeBg}`}>
-                        <StatusIcon size={12} className={status.key === 'hugged' ? 'fill-white animate-pulse' : ''} />
-                        <span>{status.label}</span>
-                      </span>
-
-                      {/* Delete Quick Trigger */}
-                      <button
-                        onClick={() => setWishToDelete(wish)}
-                        title="Delete Celebration"
-                        className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center border border-white/20 transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      <div className="min-w-0">
+                        <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight truncate leading-tight">
+                          For {wish.recipient_name}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-bold truncate mt-0.5">
+                          From <span className="text-slate-900 font-extrabold">{wish.sender_name}</span>
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Recipient & Sender Overlays */}
-                    <div className="absolute bottom-3 left-4 right-4 z-10">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-black text-lg text-white drop-shadow-sm truncate">
-                          {wish.recipient_name}&apos;s Scrapbook
-                        </h3>
-                        <span className="text-[10px] text-white font-bold bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/30 shrink-0">
-                          {wish.theme_overrides?.theme_name || "Scrapbook"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300 font-semibold truncate mt-0.5">
-                        Created by <span className="text-white font-black">{wish.sender_name}</span>
-                      </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-xl bg-violet-50 text-violet-800 border border-violet-200">
+                        {wish.theme_overrides?.theme_name || "Scrapbook"}
+                      </span>
+                      <button
+                        onClick={() => setWishToDelete(wish)}
+                        title="Delete Scrapbook"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Card Body with Value-Coded Metrics & 2px Borders */}
-                  <div className="p-4 sm:p-5 space-y-3.5">
+                  {/* ── CARD VISUAL SHOWCASE PREVIEW (BRIGHT & HIGH VISIBILITY) ── */}
+                  <div className="p-4 sm:p-5 pt-3 space-y-3.5">
                     
+                    {/* Visual Media Showcase Box */}
+                    <div className="relative rounded-2xl border-2 border-slate-200 overflow-hidden aspect-[16/9] bg-gradient-to-br from-violet-100 via-pink-50 to-amber-50 group">
+                      {coverImg ? (
+                        <img 
+                          src={coverImg} 
+                          alt={`Memory for ${wish.recipient_name}`} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            // Fallback if image fails
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
+
+                      {/* Cheerful Fallback Overlay if no image or error */}
+                      {!coverImg && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-violet-100/90 via-pink-100/90 to-amber-100/90">
+                          <span className="text-4xl mb-1 filter drop-shadow-sm">🎂</span>
+                          <span className="text-xl font-black text-slate-800 font-[family-name:var(--font-caveat)]">
+                            Magical Celebration 💫
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-600 mt-0.5">
+                            Created on {date}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Status Tag Pill on Top of Showcase */}
+                      <div className="absolute top-2.5 left-2.5 z-10">
+                        <span className={`text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md ${status.badgeBg}`}>
+                          <StatusIcon size={12} className={status.key === 'hugged' ? 'fill-white animate-pulse' : ''} />
+                          <span>{status.label}</span>
+                        </span>
+                      </div>
+
+                      {/* Created Date Overlay */}
+                      <div className="absolute bottom-2.5 right-2.5 z-10">
+                        <span className="text-[10px] font-black text-slate-900 bg-white/95 px-2.5 py-0.5 rounded-lg border border-slate-300 shadow-xs flex items-center gap-1">
+                          <Calendar size={11} className="text-slate-500" />
+                          <span>{date}</span>
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Recipient Emotional Journey Stepper Bar */}
                     <div className="p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-2">
                       <div className="flex items-center justify-between text-[11px] font-black">
@@ -762,11 +799,11 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                       {/* Views (Sky) */}
                       <div className="bg-sky-50 border-2 border-sky-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-sky-700 mb-0.5">
+                        <div className="flex items-center justify-center gap-1 text-sky-800 mb-0.5">
                           <Eye size={12} />
                           <span className="text-[10px] font-black uppercase">Views</span>
                         </div>
-                        <span className="text-sm font-black text-sky-950">{views}</span>
+                        <span className="text-base font-black text-sky-950">{views}</span>
                       </div>
 
                       {/* Gifts (Amber) */}
@@ -775,25 +812,25 @@ export default function DashboardPage() {
                           <Sparkles size={12} />
                           <span className="text-[10px] font-black uppercase">Gifts</span>
                         </div>
-                        <span className="text-sm font-black text-amber-950">{gifts}</span>
+                        <span className="text-base font-black text-amber-950">{gifts}</span>
                       </div>
 
                       {/* Letters (Violet) */}
                       <div className="bg-violet-50 border-2 border-violet-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-violet-700 mb-0.5">
+                        <div className="flex items-center justify-center gap-1 text-violet-800 mb-0.5">
                           <MailOpen size={12} />
                           <span className="text-[10px] font-black uppercase">Letter</span>
                         </div>
-                        <span className="text-sm font-black text-violet-950">{letters > 0 ? 'Read' : '0'}</span>
+                        <span className="text-base font-black text-violet-950">{letters > 0 ? 'Read' : '0'}</span>
                       </div>
 
                       {/* Hugs (Rose) */}
                       <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-rose-700 mb-0.5">
+                        <div className="flex items-center justify-center gap-1 text-rose-800 mb-0.5">
                           <Heart size={12} className="fill-rose-600" />
                           <span className="text-[10px] font-black uppercase">Hugs</span>
                         </div>
-                        <span className="text-sm font-black text-rose-950">{hugs}</span>
+                        <span className="text-base font-black text-rose-950">{hugs}</span>
                       </div>
                     </div>
 
@@ -817,7 +854,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Card Action Footer */}
+                {/* ── CARD ACTION FOOTER ── */}
                 <div className="p-4 sm:p-5 pt-0">
                   <div className="flex items-center gap-2 pt-3 border-t-2 border-slate-200">
                     <button
