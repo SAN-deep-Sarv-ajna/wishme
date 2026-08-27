@@ -20,7 +20,7 @@ const OCCASIONS = [
     badgeBg: "bg-rose-500 text-white",
     cardBg: "from-rose-500/20 via-pink-500/10 to-amber-500/10",
     border: "border-rose-300",
-    image: "/assets/images/cake.png",
+    image: "/assets/images/birthday-art.jpg",
     mascot: "🎂",
     details: "12 Photos • 3D Gift Box • Handwritten Letter"
   },
@@ -33,7 +33,7 @@ const OCCASIONS = [
     badgeBg: "bg-pink-600 text-white",
     cardBg: "from-pink-600/20 via-rose-500/10 to-purple-500/10",
     border: "border-pink-300",
-    image: "/assets/images/s1.png",
+    image: "/assets/images/anniversary-art.jpg",
     mascot: "💖",
     details: "Romantic Playlist • Living Aurora • Hug Counter"
   },
@@ -46,7 +46,7 @@ const OCCASIONS = [
     badgeBg: "bg-indigo-600 text-white",
     cardBg: "from-indigo-600/20 via-sky-500/10 to-emerald-500/10",
     border: "border-indigo-300",
-    image: "/assets/images/s2.png",
+    image: "/assets/images/graduation-art.jpg",
     mascot: "🎓",
     details: "Memory Timeline • Group Messages • Confetti Burst"
   },
@@ -59,7 +59,7 @@ const OCCASIONS = [
     badgeBg: "bg-amber-600 text-white",
     cardBg: "from-amber-600/20 via-orange-500/10 to-rose-500/10",
     border: "border-amber-300",
-    image: "/assets/images/s3.png",
+    image: "/assets/images/friendship-art.jpg",
     mascot: "💌",
     details: "Inside Jokes • Polaroid Stack • Acoustic Soundtrack"
   },
@@ -72,7 +72,7 @@ const OCCASIONS = [
     badgeBg: "bg-emerald-600 text-white",
     cardBg: "from-emerald-600/20 via-teal-500/10 to-amber-500/10",
     border: "border-emerald-300",
-    image: "/assets/images/s5.png",
+    image: "/assets/images/wedding-art.jpg",
     mascot: "🥂",
     details: "Guest Keepsake • Cinematic Vows • Elegant Gold"
   }
