@@ -46,7 +46,7 @@ export async function generateMetadata(
   const { slug } = await params;
   const wish = await getWishData(slug);
   
-  if (!wish) return { title: "Birthday Wish Not Found" };
+  if (!wish) return { title: "Scrapbook Not Found" };
 
   const ogImage = wish.photos?.length > 0 
     ? wish.photos[0].image_url 

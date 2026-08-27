@@ -493,7 +493,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
             <div className={`mini-reel ${!isMusicPlaying ? 'paused' : ''}`} />
             <div className={`mini-reel ${!isMusicPlaying ? 'paused' : ''}`} />
           </div>
-          <span className="music-title-text">{wish.music_title || 'Birthday Melody 🎵'}</span>
+          <span className="music-title-text">{wish.music_title || 'Sweet Melody 🎵'}</span>
         </div>
       )}
 
@@ -671,7 +671,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
                 ))}
 
                 <div className={`letter-signature-block ${letterRevealedItems.has('signoff') ? 'ink-reveal' : ''}`}>
-                  {interpolateText(wish.letter?.signoff, 'Happy Birthday!')}<br />
+                  {interpolateText(wish.letter?.signoff, 'With lots of love,')}<br />
                   <span style={{ fontSize: '1.4rem' }}>{interpolateText(wish.letter?.signature, wish.sender_name || 'With lots of love')}</span>
                 </div>
               </div>
@@ -727,7 +727,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
               </div>
 
               <button className="btn-cute-primary" style={{ marginTop: '14px' }} onClick={() => navigateToScreen('screen-finale')}>
-                <span>{interpolateText(wish.theme_overrides?.photos_button_text, 'Make a Birthday Wish 🎂')}</span>
+                <span>{interpolateText(wish.theme_overrides?.photos_button_text, 'Celebrate Together ✨')}</span>
               </button>
             </div>
           )}
@@ -785,7 +785,7 @@ export default function ScrapbookTemplate({ wish }: ScrapbookTemplateProps) {
                 )}
 
                 <h1 className="hand-headline" style={{ color: 'var(--accent-coral)', marginBottom: '4px' }}>
-                  {interpolateText(wish.theme_overrides?.finale_headline, `Happy Birthday ${displayName}! 🎉`)}
+                  {interpolateText(wish.theme_overrides?.finale_headline, `Celebrating ${displayName}! 🎉`)}
                 </h1>
                 <p className="doodle-subtitle" style={{ marginBottom: '0', fontSize: '0.95rem', lineHeight: '1.5' }}>
                   {interpolateText(wish.theme_overrides?.finale_subtitle, "May this year be filled with endless joy, laughter, and magical adventures!")}

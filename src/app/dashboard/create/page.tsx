@@ -150,6 +150,7 @@ export const OCCASION_PRESETS = [
     label: "🎂 Birthday",
     coverHeadline: "Special Birthday Delivery! 🎁",
     coverSubtitle: "A cute little handmade scrapbook for your special day. Will you accept this gift?",
+    photosButtonText: "Make a Birthday Wish 🎂",
     finaleHeadline: "Happy Birthday {name}! 🎉",
     finaleSubtitle: "May this year be filled with endless joy, laughter, and magical adventures!",
     finaleEmoji: "🎂",
@@ -192,6 +193,7 @@ export const OCCASION_PRESETS = [
     label: "💍 Anniversary",
     coverHeadline: "Happy Anniversary! 💍",
     coverSubtitle: "A handmade scrapbook celebrating all our precious moments together.",
+    photosButtonText: "To Our Next Chapter 🥂",
     finaleHeadline: "To Many More Beautiful Years! 🥂",
     finaleSubtitle: "I love you more with every passing day. Forever and always! ❤️",
     finaleEmoji: "🥂",
@@ -234,6 +236,7 @@ export const OCCASION_PRESETS = [
     label: "💖 Romance & Love",
     coverHeadline: "A Special Delivery For My Favorite Person 💖",
     coverSubtitle: "A little love letter and scrapbook made just for you.",
+    photosButtonText: "To You, With Love 💖",
     finaleHeadline: "You Mean The World To Me! ❤️",
     finaleSubtitle: "Thank you for making my life so incredibly magical and sweet.",
     finaleEmoji: "💖",
@@ -276,6 +279,7 @@ export const OCCASION_PRESETS = [
     label: "🌟 Friendship",
     coverHeadline: "For The Best Friend in the World! 🌟",
     coverSubtitle: "A scrapbook of chaotic memories, silly laughs, and golden moments!",
+    photosButtonText: "Cheers to Our Bond! 🌟",
     finaleHeadline: "Lucky To Have You As My Bestie! ✨",
     finaleSubtitle: "Here is to endless snacks, crazy adventures, and zero stress!",
     finaleEmoji: "🌟",
@@ -318,6 +322,7 @@ export const OCCASION_PRESETS = [
     label: "✍️ Custom Occasion",
     coverHeadline: "Special Delivery for {name}! 🎁",
     coverSubtitle: "A cute little handmade scrapbook made just for you.",
+    photosButtonText: "Celebrate Together ✨",
     finaleHeadline: "Congratulations {name}! 🎉",
     finaleSubtitle: "Wishing you the absolute best on this special milestone!",
     finaleEmoji: "✨",
@@ -564,6 +569,7 @@ export default function CreateWishPage() {
         ...prev.theme_overrides,
         cover_headline: occ.coverHeadline.replace(/\{name\}/gi, repName),
         cover_subtitle: occ.coverSubtitle.replace(/\{name\}/gi, repName),
+        photos_button_text: occ.photosButtonText,
         finale_headline: occ.finaleHeadline.replace(/\{name\}/gi, repName),
         finale_subtitle: occ.finaleSubtitle.replace(/\{name\}/gi, repName),
         finale_emoji: occ.finaleEmoji
@@ -1014,7 +1020,7 @@ export default function CreateWishPage() {
         letter: {
           greeting: cleanText(formData.letter.greeting) || `Dear ${repName},`,
           paragraphs: (formData.letter.paragraphs || []).map(p => cleanText(p)).filter(Boolean),
-          signoff: cleanText(formData.letter.signoff) || "Happy Birthday!",
+          signoff: cleanText(formData.letter.signoff) || "With lots of love,",
           signature: cleanText(formData.letter.signature) || sender
         },
         gift_cards: (formData.gift_cards || []).map(card => ({
@@ -1027,7 +1033,8 @@ export default function CreateWishPage() {
           ...formData.theme_overrides,
           cover_headline: cleanText(formData.theme_overrides?.cover_headline) || `Special Delivery for ${repName}! 🎁`,
           cover_subtitle: cleanText(formData.theme_overrides?.cover_subtitle) || "A cute little handmade scrapbook for your special day. Will you accept this gift?",
-          finale_headline: cleanText(formData.theme_overrides?.finale_headline) || `Happy Birthday ${repName}! 🎉`,
+          photos_button_text: cleanText(formData.theme_overrides?.photos_button_text) || "Celebrate Together ✨",
+          finale_headline: cleanText(formData.theme_overrides?.finale_headline) || `Celebrating ${repName}! 🎉`,
           finale_subtitle: cleanText(formData.theme_overrides?.finale_subtitle) || "May this year be filled with endless joy, laughter, and magical adventures!"
         }
       };
@@ -1281,7 +1288,7 @@ export default function CreateWishPage() {
             {/* ── Recipient Hero Photo Upload ── */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Birthday Person&apos;s Photo
+                Recipient&apos;s Photo
               </label>
               <p className="text-xs text-slate-400 mb-3">
                 This photo will appear on the cover and finale of the scrapbook, making it personal and beautiful.
