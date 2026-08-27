@@ -125,11 +125,7 @@ export default function DashboardPage() {
         label: "Privacy Scrubbed",
         badgeBg: "bg-slate-900 text-white border-2 border-slate-700",
         pillBg: "bg-slate-100 text-slate-900 border-2 border-slate-400",
-        accentColor: "text-slate-700",
-        progressColor: "bg-slate-500",
-        icon: Lock,
-        progress: 100,
-        stageText: "Data destroyed"
+        icon: Lock
       };
     }
     const hugs = wish.analytics?.hug_sent || 0;
@@ -143,11 +139,7 @@ export default function DashboardPage() {
         label: "Loved & Hugged",
         badgeBg: "bg-rose-600 text-white border-2 border-rose-300 shadow-md shadow-rose-600/30",
         pillBg: "bg-rose-100 text-rose-900 border-2 border-rose-400",
-        accentColor: "text-rose-700",
-        progressColor: "bg-rose-500",
-        icon: Heart,
-        progress: 100,
-        stageText: `${hugs} warm hug${hugs === 1 ? '' : 's'} received!`
+        icon: Heart
       };
     }
     if (gifts > 0 || letters > 0) {
@@ -156,11 +148,7 @@ export default function DashboardPage() {
         label: "Gifts Unwrapping",
         badgeBg: "bg-amber-600 text-white border-2 border-amber-300 shadow-md shadow-amber-600/30",
         pillBg: "bg-amber-100 text-amber-950 border-2 border-amber-400",
-        accentColor: "text-amber-800",
-        progressColor: "bg-amber-500",
-        icon: Sparkles,
-        progress: 66,
-        stageText: `${gifts} reason${gifts === 1 ? '' : 's'} opened`
+        icon: Sparkles
       };
     }
     if (views > 0) {
@@ -169,11 +157,7 @@ export default function DashboardPage() {
         label: "Link Opened",
         badgeBg: "bg-sky-600 text-white border-2 border-sky-300 shadow-md shadow-sky-600/30",
         pillBg: "bg-sky-100 text-sky-950 border-2 border-sky-400",
-        accentColor: "text-sky-800",
-        progressColor: "bg-sky-500",
-        icon: Eye,
-        progress: 33,
-        stageText: "Viewer is reading"
+        icon: Eye
       };
     }
     return {
@@ -181,11 +165,7 @@ export default function DashboardPage() {
       label: "Awaiting Open",
       badgeBg: "bg-indigo-700 text-white border-2 border-indigo-300 shadow-md shadow-indigo-700/30",
       pillBg: "bg-indigo-100 text-indigo-950 border-2 border-indigo-400",
-      accentColor: "text-indigo-800",
-      progressColor: "bg-indigo-600",
-      icon: Clock,
-      progress: 10,
-      stageText: "Ready to share"
+      icon: Clock
     };
   };
 
@@ -773,27 +753,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Recipient Emotional Journey Stepper Bar */}
-                    <div className="p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-black">
-                        <span className="text-slate-600 uppercase tracking-wider">Journey Stage</span>
-                        <span className={`font-black ${status.accentColor}`}>
-                          {status.stageText}
-                        </span>
-                      </div>
 
-                      {/* 4-Step Color Progression Track */}
-                      <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex gap-1 p-0.5 border border-slate-300">
-                        {/* Step 1: Created (Indigo) */}
-                        <div className="h-full flex-1 rounded-l-full bg-indigo-600" />
-                        {/* Step 2: Opened (Sky Blue) */}
-                        <div className={`h-full flex-1 transition-colors ${views > 0 ? 'bg-sky-500' : 'bg-slate-200'}`} />
-                        {/* Step 3: Unwrapped (Amber) */}
-                        <div className={`h-full flex-1 transition-colors ${gifts > 0 || letters > 0 ? 'bg-amber-500' : 'bg-slate-200'}`} />
-                        {/* Step 4: Hugs (Rose) */}
-                        <div className={`h-full flex-1 rounded-r-full transition-colors ${hugs > 0 ? 'bg-rose-500 animate-pulse' : 'bg-slate-200'}`} />
-                      </div>
-                    </div>
 
                     {/* Detailed Metric Pills (High-Contrast 2px Borders) */}
                     <div className="grid grid-cols-4 gap-1.5 sm:gap-2">

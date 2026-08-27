@@ -256,10 +256,10 @@ export default function DashboardLayout({
                 <span className="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 border border-amber-300 flex items-center justify-center font-black text-xs">
                   ✨
                 </span>
-                <p className="text-xs font-black text-slate-900">Color-Coded Status</p>
+                <p className="text-xs font-black text-slate-900">Real-Time Engagement</p>
               </div>
               <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                Badges and progress bars change colors live as your recipient unboxes gifts and sends you hugs!
+                Live metrics and status badges update automatically as your recipient opens gifts and sends you hugs!
               </p>
             </div>
           </div>
