@@ -81,13 +81,18 @@ export default function DashboardPage() {
 
   const handleDeleteConfirm = async () => {
     if (!wishToDelete) return;
+    setDeleting(true);
     try {
-      setDeleting(true);
       await api.wishes.delete(wishToDelete.id);
-      setWishes(prev => prev.filter(w => w.id !== wishToDelete.id));
+      // Instead of removing from UI, update it to show as Scrubbed (keeping analytics visible)
+      setWishes(wishes.map(w => 
+        w.id === wishToDelete.id 
+          ? { ...w, is_scrubbed: true, recipient_name: "[SCRUBBED]", is_published: false }
+          : w
+      ));
       setWishToDelete(null);
     } catch (err: any) {
-      alert(`Failed to delete wish: ${err.message}`);
+      alert("Failed to delete wish: " + err.message);
     } finally {
       setDeleting(false);
     }
@@ -270,11 +275,60 @@ export default function DashboardPage() {
         /* Responsive Grid of Cards */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredWishes.map((wish) => {
+            const isScrubbed = wish.is_scrubbed || wish.recipient_name === "[SCRUBBED]";
+            const date = new Date(wish.created_at).toLocaleDateString("en-US", {
+              month: "short", day: "numeric", year: "numeric"
+            });
             const isCopied = copiedId === wish.id;
             const hugs = wish.analytics?.hug_sent || 0;
             const views = wish.analytics?.view || 0;
             const gifts = wish.analytics?.gift_opened || 0;
             const letters = wish.analytics?.letter_read || 0;
+            const totalInteractions = hugs + gifts + letters;
+
+            if (isScrubbed) {
+              return (
+                <div key={wish.id} className="bg-slate-50/80 backdrop-blur-xl rounded-3xl border border-slate-200/60 overflow-hidden shadow-xs flex flex-col justify-between opacity-80">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-slate-200/70 rounded-2xl flex items-center justify-center shadow-inner grayscale">
+                        <Lock className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                        Scrubbed
+                      </span>
+                    </div>
+                    
+                    <h2 className="text-xl font-bold text-slate-500 mb-1 line-through decoration-slate-300">
+                      Private Memory
+                    </h2>
+                    <p className="text-xs text-slate-400 font-medium mb-6">
+                      Created {date}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <div className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs">
+                        <Eye size={16} className="text-slate-400 mb-1" />
+                        <span className="text-lg font-black text-slate-700 leading-none">{views}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">Views</span>
+                      </div>
+                      <div className="bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-xs">
+                        <Heart size={16} className="text-rose-300 mb-1" />
+                        <span className="text-lg font-black text-slate-700 leading-none">{totalInteractions}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">Interactions</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-100/50 border border-slate-200/60 rounded-2xl p-3 flex gap-2">
+                      <Lock size={14} className="text-slate-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                        Photos and messages were securely destroyed. Analytics are permanently retained.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div 

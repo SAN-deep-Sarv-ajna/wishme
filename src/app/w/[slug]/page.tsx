@@ -1,6 +1,6 @@
 import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
-import ScrapbookTemplate from "@/components/viewer/ScrapbookTemplate";
+import UnboxingGate from "@/components/viewer/UnboxingGate";
 
 const DEFAULT_THEME = {
   "--bg-canvas": "#f6f3eb",
@@ -77,6 +77,27 @@ export default async function WishViewerPage({
     notFound();
   }
 
+  const isScrubbed = wish.is_scrubbed || wish.recipient_name === "[SCRUBBED]";
+
+  if (isScrubbed) {
+    return (
+      <main className="w-full min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-[2rem] p-8 md:p-12 shadow-2xl">
+          <div className="w-20 h-20 bg-slate-800/80 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-700">
+            <span className="text-3xl">🔒</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-3">Memory Secured</h1>
+          <p className="text-slate-400 text-sm leading-relaxed font-medium mb-8">
+            To protect your privacy, the creator has securely shredded this digital scrapbook. All photos, audio, and personal messages have been permanently deleted from our servers.
+          </p>
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold border border-emerald-500/20">
+            ✓ 100% Data Wiped
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // Fire analytics tracking
   try {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/event`, {
@@ -93,7 +114,7 @@ export default async function WishViewerPage({
 
   return (
     <main style={dynamicTheme} className="w-full min-h-screen bg-[color:var(--bg-canvas)] overflow-hidden">
-      <ScrapbookTemplate wish={wish} />
+      <UnboxingGate wish={wish} />
     </main>
   );
 }

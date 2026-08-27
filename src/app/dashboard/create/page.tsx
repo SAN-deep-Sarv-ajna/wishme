@@ -1186,6 +1186,7 @@ export default function CreateWishPage() {
               />
             </div>
 
+
             {/* ── Recipient Hero Photo Upload ── */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">
