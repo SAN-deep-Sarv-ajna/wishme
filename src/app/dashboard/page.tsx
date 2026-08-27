@@ -7,12 +7,12 @@ import {
   Loader2, Plus, Gift, Eye, AlertCircle, RefreshCw, Copy, Check, 
   Trash2, Heart, Sparkles, ExternalLink, Search, 
   TrendingUp, Users, Inbox, Lock, LayoutGrid, List, Filter,
-  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, MailOpen, X,
-  Calendar, UserCheck, Image as ImageIcon
+  ArrowUpRight, Clock, CheckCircle2, ChevronRight, Share2, X,
+  Calendar, UserCheck, Activity, Flame
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type FilterType = "all" | "hugged" | "opened" | "unwrapped" | "pending" | "scrubbed";
+type FilterType = "all" | "hugged" | "opened" | "pending" | "scrubbed";
 type SortType = "latest" | "most_hugs" | "most_views" | "name";
 
 export default function DashboardPage() {
@@ -128,8 +128,6 @@ export default function DashboardPage() {
       };
     }
     const hugs = wish.analytics?.hug_sent || 0;
-    const gifts = wish.analytics?.gift_opened || 0;
-    const letters = wish.analytics?.letter_read || 0;
     const views = wish.analytics?.view || 0;
 
     if (hugs > 0) {
@@ -139,15 +137,6 @@ export default function DashboardPage() {
         badgeBg: "bg-rose-600 text-white border-2 border-rose-300 shadow-md shadow-rose-600/30",
         pillBg: "bg-rose-100 text-rose-900 border-2 border-rose-400",
         icon: Heart
-      };
-    }
-    if (gifts > 0 || letters > 0) {
-      return {
-        key: "unwrapped",
-        label: "Gifts Unwrapping",
-        badgeBg: "bg-amber-600 text-white border-2 border-amber-300 shadow-md shadow-amber-600/30",
-        pillBg: "bg-amber-100 text-amber-950 border-2 border-amber-400",
-        icon: Sparkles
       };
     }
     if (views > 0) {
@@ -168,35 +157,29 @@ export default function DashboardPage() {
     };
   };
 
-  // Aggregated analytics metrics
+  // Aggregated analytics metrics (Focused purely on Celebrations, Views, Hugs)
   const metrics = useMemo(() => {
     const totalWishes = wishes.length;
     let totalViews = 0;
     let totalHugs = 0;
-    let totalGiftsOpened = 0;
     let huggedCount = 0;
-    let inProgressCount = 0;
+    let openedCount = 0;
     let pendingCount = 0;
     let scrubbedCount = 0;
 
     wishes.forEach(w => {
       const v = w.analytics?.view || 0;
       const h = w.analytics?.hug_sent || 0;
-      const g = w.analytics?.gift_opened || 0;
-      const l = w.analytics?.letter_read || 0;
       
       totalViews += v;
       totalHugs += h;
-      totalGiftsOpened += g;
 
       if (w.is_scrubbed || w.recipient_name === "[SCRUBBED]") {
         scrubbedCount++;
       } else if (h > 0) {
         huggedCount++;
-      } else if (g > 0 || l > 0) {
-        inProgressCount++;
       } else if (v > 0) {
-        inProgressCount++;
+        openedCount++;
       } else {
         pendingCount++;
       }
@@ -206,9 +189,8 @@ export default function DashboardPage() {
       totalWishes, 
       totalViews, 
       totalHugs, 
-      totalGiftsOpened,
       huggedCount,
-      inProgressCount,
+      openedCount,
       pendingCount,
       scrubbedCount
     };
@@ -275,31 +257,31 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── 1. CHROMATIC VALUE-BASED KPI CARDS (HIGH-CONTRAST 2PX BORDERS) ── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      {/* ── 1. EXECUTIVE 3-COLUMN METRICS GRID (CLEAN, PREMIUM & FOCUSED) ── */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
         
-        {/* Metric 1: Total Scrapbooks (Royal Violet / Indigo) */}
+        {/* Metric 1: Total Celebrations (Royal Violet / Indigo) */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.05 }}
-          className="bg-white border-2 border-violet-300 hover:border-violet-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-violet-300 hover:border-violet-500 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[10px] sm:text-[11px] font-black text-violet-800 tracking-wider uppercase bg-violet-100 px-2 sm:px-2.5 py-1 rounded-lg border border-violet-300">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-black text-violet-800 tracking-wider uppercase bg-violet-100 px-2.5 py-1 rounded-lg border border-violet-300">
               Celebrations
             </span>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-violet-400">
-              <Gift size={16} className="sm:size-5" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-sm border border-violet-400">
+              <Gift size={20} />
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalWishes}</h3>
-            <span className="text-[11px] sm:text-xs text-violet-700 font-extrabold">created</span>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalWishes}</h3>
+            <span className="text-xs text-violet-700 font-extrabold">scrapbooks</span>
           </div>
-          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 font-bold truncate">
             <span className="w-2 h-2 rounded-full bg-violet-600 shrink-0" />
-            <span>Interactive scrapbooks</span>
+            <span>Interactive memory keepsakes</span>
           </div>
         </motion.div>
 
@@ -308,25 +290,25 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.1 }}
-          className="bg-white border-2 border-emerald-300 hover:border-emerald-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-emerald-300 hover:border-emerald-500 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[10px] sm:text-[11px] font-black text-emerald-800 tracking-wider uppercase bg-emerald-100 px-2 sm:px-2.5 py-1 rounded-lg border border-emerald-300">
-              Total Views
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-black text-emerald-800 tracking-wider uppercase bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300">
+              Total Impressions
             </span>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-sm border border-emerald-400">
-              <Eye size={16} className="sm:size-5" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-sm border border-emerald-400">
+              <Eye size={20} />
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalViews}</h3>
-            <span className="text-[11px] sm:text-xs text-emerald-700 font-black flex items-center gap-0.5">
-              <TrendingUp size={12} /> Active
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalViews}</h3>
+            <span className="text-xs text-emerald-700 font-black flex items-center gap-0.5">
+              <TrendingUp size={13} /> Active
             </span>
           </div>
-          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 font-bold truncate">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span>Live recipient views</span>
+            <span>Live recipient link views</span>
           </div>
         </motion.div>
 
@@ -335,50 +317,25 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, delay: 0.15 }}
-          className="bg-white border-2 border-rose-300 hover:border-rose-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
+          className="bg-white border-2 border-rose-300 hover:border-rose-500 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
         >
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[10px] sm:text-[11px] font-black text-rose-800 tracking-wider uppercase bg-rose-100 px-2 sm:px-2.5 py-1 rounded-lg border border-rose-300">
-              Hugs Sent
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-black text-rose-800 tracking-wider uppercase bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-300">
+              Warm Hugs Received
             </span>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-600 text-white flex items-center justify-center shadow-sm border border-rose-400">
-              <Heart size={16} className="fill-white sm:size-5" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-600 text-white flex items-center justify-center shadow-sm border border-rose-400">
+              <Heart size={20} className="fill-white" />
             </div>
           </div>
-          <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <h3 className="text-2xl sm:text-4xl font-black text-rose-600 tracking-tight">{metrics.totalHugs}</h3>
-            <span className="text-[11px] sm:text-xs text-rose-700 font-black flex items-center gap-0.5">
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">{metrics.totalHugs}</h3>
+            <span className="text-xs text-rose-700 font-black flex items-center gap-0.5">
               💖 Live
             </span>
           </div>
-          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 font-bold truncate">
             <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-            <span>Heartfelt returns</span>
-          </div>
-        </motion.div>
-
-        {/* Metric 4: Gifts & Reasons Unwrapped (Honey Amber / Gold) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, delay: 0.2 }}
-          className="bg-white border-2 border-amber-300 hover:border-amber-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden group"
-        >
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[10px] sm:text-[11px] font-black text-amber-900 tracking-wider uppercase bg-amber-100 px-2 sm:px-2.5 py-1 rounded-lg border border-amber-300">
-              Unwrapped
-            </span>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm border border-amber-400">
-              <Sparkles size={16} className="sm:size-5" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <h3 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{metrics.totalGiftsOpened}</h3>
-            <span className="text-[11px] sm:text-xs text-amber-800 font-black">revealed</span>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 font-bold truncate">
-            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-            <span>Gifts & letters opened</span>
+            <span>Heartfelt emotional returns</span>
           </div>
         </motion.div>
       </section>
@@ -495,21 +452,21 @@ export default function DashboardPage() {
             </span>
           </button>
 
-          {/* Chip 3: In Progress / Unwrapped (Amber) */}
+          {/* Chip 3: Link Opened (Sky) */}
           <button
-            onClick={() => setActiveFilter("unwrapped")}
+            onClick={() => setActiveFilter("opened")}
             className={`px-3.5 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-1.5 min-h-[38px] active:scale-95 ${
-              activeFilter === "unwrapped"
-                ? "bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-500/20"
-                : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+              activeFilter === "opened"
+                ? "bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/20"
+                : "bg-sky-50 text-sky-900 border-sky-300 hover:bg-sky-100"
             }`}
           >
-            <Sparkles size={13} />
-            <span>In Progress</span>
+            <Eye size={13} />
+            <span>Viewed & Active</span>
             <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-              activeFilter === "unwrapped" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-950"
+              activeFilter === "opened" ? "bg-white/20 text-white" : "bg-sky-200 text-sky-950"
             }`}>
-              {metrics.inProgressCount}
+              {metrics.openedCount}
             </span>
           </button>
 
@@ -598,7 +555,7 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        /* ── GRID VIEW (MAXIMUM VISIBILITY & CRYSTAL-CLEAR CELEBRATION CARDS) ── */
+        /* ── GRID VIEW (AESTHETIC & PREMIUM WITH FOCUSED VIEWS & HUGS) ── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {processedWishes.map((wish) => {
             const status = getWishStatus(wish);
@@ -611,8 +568,6 @@ export default function DashboardPage() {
             
             const hugs = wish.analytics?.hug_sent || 0;
             const views = wish.analytics?.view || 0;
-            const gifts = wish.analytics?.gift_opened || 0;
-            const letters = wish.analytics?.letter_read || 0;
 
             const coverImg = wish.photos && wish.photos.length > 0 
               ? resolveImageUrl(wish.photos[0].image_url) 
@@ -705,7 +660,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* ── CARD VISUAL SHOWCASE PREVIEW (BRIGHT & HIGH VISIBILITY) ── */}
+                  {/* ── CARD VISUAL SHOWCASE PREVIEW ── */}
                   <div className="p-4 sm:p-5 pt-3 space-y-3.5">
                     
                     {/* Visual Media Showcase Box */}
@@ -752,45 +707,41 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-
-
-                    {/* Detailed Metric Pills (High-Contrast 2px Borders) */}
-                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                      {/* Views (Sky) */}
-                      <div className="bg-sky-50 border-2 border-sky-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-sky-800 mb-0.5">
-                          <Eye size={12} />
-                          <span className="text-[10px] font-black uppercase">Views</span>
+                    {/* ── PREMIUM VALUE CAPSULE: VIEWS & WARM HUGS ── */}
+                    <div className="grid grid-cols-2 gap-2.5">
+                      
+                      {/* Left: Live Impressions / Views */}
+                      <div className="bg-sky-50/90 border-2 border-sky-200 hover:border-sky-400 rounded-2xl p-3 flex items-center gap-3 transition-colors">
+                        <div className="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                          <Eye size={17} />
                         </div>
-                        <span className="text-base font-black text-sky-950">{views}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-black text-sky-950 leading-none">{views}</span>
+                            <span className="text-[10px] font-black text-sky-700 uppercase">views</span>
+                          </div>
+                          <p className="text-[10px] text-sky-800 font-bold truncate mt-0.5">
+                            {views === 1 ? '1 impression' : 'Live reach'}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Gifts (Amber) */}
-                      <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-amber-800 mb-0.5">
-                          <Sparkles size={12} />
-                          <span className="text-[10px] font-black uppercase">Gifts</span>
+                      {/* Right: Emotional Returns / Warm Hugs */}
+                      <div className="bg-rose-50/90 border-2 border-rose-200 hover:border-rose-400 rounded-2xl p-3 flex items-center gap-3 transition-colors">
+                        <div className="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                          <Heart size={17} className={hugs > 0 ? "fill-white animate-pulse" : ""} />
                         </div>
-                        <span className="text-base font-black text-amber-950">{gifts}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-black text-rose-950 leading-none">{hugs}</span>
+                            <span className="text-[10px] font-black text-rose-700 uppercase">hugs</span>
+                          </div>
+                          <p className="text-[10px] text-rose-800 font-bold truncate mt-0.5">
+                            {hugs > 0 ? 'Loved it!' : 'Waiting'}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Letters (Violet) */}
-                      <div className="bg-violet-50 border-2 border-violet-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-violet-800 mb-0.5">
-                          <MailOpen size={12} />
-                          <span className="text-[10px] font-black uppercase">Letter</span>
-                        </div>
-                        <span className="text-base font-black text-violet-950">{letters > 0 ? 'Read' : '0'}</span>
-                      </div>
-
-                      {/* Hugs (Rose) */}
-                      <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-2 text-center">
-                        <div className="flex items-center justify-center gap-1 text-rose-800 mb-0.5">
-                          <Heart size={12} className="fill-rose-600" />
-                          <span className="text-[10px] font-black uppercase">Hugs</span>
-                        </div>
-                        <span className="text-base font-black text-rose-950">{hugs}</span>
-                      </div>
                     </div>
 
                     {/* Share Link Pill (Touch Friendly) */}
@@ -831,7 +782,7 @@ export default function DashboardPage() {
           })}
         </div>
       ) : (
-        /* ── LIST / TABLE VIEW (HIGH-CONTRAST BORDERS) ── */
+        /* ── LIST / TABLE VIEW (FOCUSED ON VIEWS & HUGS) ── */
         <div className="bg-white rounded-3xl border-2 border-slate-300 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -839,10 +790,9 @@ export default function DashboardPage() {
                 <tr>
                   <th className="py-3.5 px-4 sm:px-5">Recipient & Creator</th>
                   <th className="py-3.5 px-3">Status</th>
-                  <th className="py-3.5 px-3 text-center">Views</th>
-                  <th className="py-3.5 px-3 text-center">Gifts</th>
-                  <th className="py-3.5 px-3 text-center">Hugs</th>
-                  <th className="py-3.5 px-3">Created</th>
+                  <th className="py-3.5 px-4 text-center">Live Views</th>
+                  <th className="py-3.5 px-4 text-center">Hugs Received</th>
+                  <th className="py-3.5 px-3">Created Date</th>
                   <th className="py-3.5 px-4 sm:px-5 text-right">Actions</th>
                 </tr>
               </thead>
@@ -875,21 +825,16 @@ export default function DashboardPage() {
                         </span>
                       </td>
 
-                      <td className="py-4 px-3 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 font-black border-2 border-sky-300">
+                      <td className="py-4 px-4 text-center">
+                        <span className="px-3 py-1.5 rounded-xl bg-sky-50 text-sky-900 font-black border-2 border-sky-300 inline-flex items-center gap-1">
+                          <Eye size={12} className="text-sky-700" />
                           {wish.analytics?.view || 0}
                         </span>
                       </td>
 
-                      <td className="py-4 px-3 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-black border-2 border-amber-300">
-                          {wish.analytics?.gift_opened || 0}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-3 text-center">
-                        <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 font-black border-2 border-rose-300 flex items-center justify-center gap-1 mx-auto max-w-[50px]">
-                          <Heart size={11} className="fill-rose-600" />
+                      <td className="py-4 px-4 text-center">
+                        <span className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-900 font-black border-2 border-rose-300 inline-flex items-center gap-1">
+                          <Heart size={12} className="fill-rose-600 text-rose-600" />
                           {wish.analytics?.hug_sent || 0}
                         </span>
                       </td>
