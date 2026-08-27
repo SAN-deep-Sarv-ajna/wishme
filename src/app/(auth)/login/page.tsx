@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Loader2, Mail, Lock, AlertCircle, CheckCircle2, Gift } from "lucide-react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -100,11 +101,8 @@ export default function LoginPage() {
         <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] bg-rose-500 rounded-full mix-blend-screen filter blur-[150px] opacity-30" style={{ animationDelay: '2s' }}></div>
         
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-2.5 text-white font-bold text-2xl tracking-tight">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-rose-400 to-indigo-500 rounded-xl shadow-lg">
-            <Gift className="w-5 h-5 text-white" />
-          </div>
-          WishMe
+        <div className="relative z-10">
+          <BrandLogo size="lg" href="/" wordmarkClassName="text-white text-2xl" />
         </div>
         
         {/* Value Proposition */}
@@ -137,11 +135,8 @@ export default function LoginPage() {
       {/* Right Column: Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
         {/* Mobile Logo */}
-        <div className="absolute top-8 left-6 sm:left-12 lg:hidden flex items-center gap-2.5 text-slate-900 font-bold text-xl tracking-tight">
-          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-rose-400 to-indigo-500 rounded-lg shadow-sm">
-            <Gift className="w-4 h-4 text-white" />
-          </div>
-          WishMe
+        <div className="absolute top-8 left-6 sm:left-12 lg:hidden">
+          <BrandLogo size="sm" href="/" />
         </div>
 
         <div className="w-full max-w-[400px] space-y-8 mt-12 lg:mt-0">

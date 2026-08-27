@@ -9,6 +9,7 @@ import {
   Sparkles, ExternalLink, ShieldCheck, Heart, User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { BrandLogo, BrandMark } from "@/components/ui/BrandLogo";
 
 export default function DashboardLayout({
   children,
@@ -104,19 +105,7 @@ export default function DashboardLayout({
       
       {/* ── MOBILE TOP BAR (HIGH CONTRAST & TOUCH FRIENDLY) ── */}
       <header className="md:hidden bg-white/95 backdrop-blur-xl border-b-2 border-slate-300 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-xs">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 via-pink-500 to-amber-400 p-[2px] shadow-sm">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-white">
-              <Gift size={18} className="text-pink-400" />
-            </div>
-          </div>
-          <div>
-            <span className="font-black text-base text-slate-900 tracking-tight flex items-center gap-1.5">
-              Memoria
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-black bg-violet-100 text-violet-800 border border-violet-300">PRO</span>
-            </span>
-          </div>
-        </Link>
+        <BrandLogo size="sm" href="/dashboard" badge="STUDIO" />
 
         <div className="flex items-center gap-2 relative" ref={menuRef}>
           <Link
@@ -192,26 +181,10 @@ export default function DashboardLayout({
         
         {/* Brand Header */}
         <div className="p-6 border-b-2 border-slate-200">
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 via-pink-500 to-amber-400 p-[2px] shadow-md shadow-pink-500/15 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-white">
-                <Gift size={22} className="text-pink-400 group-hover:rotate-12 transition-transform" />
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-lg text-slate-900 tracking-tight">
-                  Memoria
-                </span>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-600 to-pink-600 text-white shadow-xs">
-                  PRO
-                </span>
-              </div>
-              <span className="text-[11px] text-slate-500 font-semibold block">
-                Interactive Celebration Studio
-              </span>
-            </div>
-          </Link>
+          <BrandLogo size="md" href="/dashboard" badge="STUDIO" />
+          <span className="text-[11px] text-slate-500 font-semibold block mt-1">
+            Interactive Celebration Studio
+          </span>
         </div>
         
         {/* Navigation Links */}

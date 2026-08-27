@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Sparkles, Heart, Image as ImageIcon, Send, ArrowRight, Gift, CheckCircle2, Lock, Star, PlayCircle } from "lucide-react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function LandingPage() {
   return (
@@ -31,12 +32,7 @@ export default function LandingPage() {
       {/* ── NAVIGATION ── */}
       <nav className="fixed w-full z-50 top-0 transition-all duration-500 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-slate-900 font-bold text-lg sm:text-xl tracking-tight">
-            <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-rose-400 to-rose-600 rounded-lg sm:rounded-xl shadow-sm shadow-rose-200">
-              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            WishMe
-          </div>
+          <BrandLogo size="md" href="/" />
           <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/login" className="hidden sm:block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               Log in
@@ -228,9 +224,7 @@ export default function LandingPage() {
           </Link>
           
           <div className="mt-16 sm:mt-24 pt-8 sm:pt-10 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between text-xs sm:text-sm text-slate-500 gap-4 sm:gap-0">
-            <div className="flex items-center gap-2 font-bold text-slate-300">
-              <Gift className="w-4 h-4 text-rose-500" /> WishMe
-            </div>
+            <BrandLogo size="sm" href="/" wordmarkClassName="text-white" />
             <div>
               &copy; {new Date().getFullYear()} WishMe. Spread love, not paper.
             </div>

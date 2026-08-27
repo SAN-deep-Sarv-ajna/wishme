@@ -10,8 +10,11 @@ const dancingScript = Dancing_Script({ subsets: ["latin"], variable: "--font-dan
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "Special Wish Creator",
-  description: "Create magical, animated scrapbooks and wishes for your loved ones.",
+  title: "WishMe — Living Memory Scrapbooks & Interactive Celebrations",
+  description: "Create magical, interactive scrapbooks with living auroras, 3D gift unboxing, music, and memories.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
